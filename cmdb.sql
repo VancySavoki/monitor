@@ -257,7 +257,6 @@ CREATE TABLE `cmdb_resource_groups` (
 
 LOCK TABLES `cmdb_resource_groups` WRITE;
 /*!40000 ALTER TABLE `cmdb_resource_groups` DISABLE KEYS */;
-INSERT INTO `cmdb_resource_groups` VALUES (1,'民宿研发部','2016-07-29 05:50:35','','',NULL),(3,'互联网研发部','2016-07-29 05:51:53','','',1469771514);
 /*!40000 ALTER TABLE `cmdb_resource_groups` ENABLE KEYS */;
 UNLOCK TABLES;
 
