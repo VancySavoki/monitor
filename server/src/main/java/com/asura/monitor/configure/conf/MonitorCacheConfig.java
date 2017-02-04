@@ -18,7 +18,7 @@ package com.asura.monitor.configure.conf;
 public class MonitorCacheConfig {
 
     // 存放每个主机对应的在cmdb的id
-    public static String hostsIdKey = "_cache_hosts_id_";
+    public static String hostsIdKey = "cache_hosts_id_";
 
     // 存放有配置的主机的配置信息
     public static String cacheConfigureHostsListKey = "cache_configure_hosts_list";

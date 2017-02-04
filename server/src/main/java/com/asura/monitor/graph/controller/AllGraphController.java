@@ -31,6 +31,7 @@ import static com.asura.monitor.graph.util.FileRender.getDirFiles;
 import static com.asura.monitor.graph.util.FileRender.getSubDir;
 import static com.asura.monitor.graph.util.FileRender.readHistory;
 import static com.asura.monitor.graph.util.FileRender.separator;
+import static com.asura.monitor.graph.util.FileWriter.dataDir;
 
 /**
  * <p></p>
@@ -322,6 +323,33 @@ public class AllGraphController {
     }
 
     /**
+     *
+     * @param key
+     * @param result
+     * @param name
+     * @param groups
+     * @return
+     */
+    String getRealData(String key, String result, String name, String groups, Gson gson){
+        Map map = new HashMap();
+        List datas = new ArrayList();
+        if (result.length()> key.length()) {
+            Type type = new TypeToken<ArrayList<PushEntity>>() {
+            }.getType();
+            List<PushEntity> list = new Gson().fromJson(result, type);
+            for (PushEntity entity : list) {
+                if (entity.getGroups().equals(groups) && entity.getName().equals(name)) {
+                    map.put("name", name);
+                    map.put("groups", groups);
+                    map.put("value", entity.getValue());
+                }
+            }
+            datas.add(map);
+        }
+        return gson.toJson(datas);
+    }
+
+    /**
      * 实时获取数据
      */
     @RequestMapping(value = "realtime", produces = {"application/json;charset=utf-8"})
@@ -363,7 +391,12 @@ public class AllGraphController {
             scriptId = indexMap.get(key);
         }
         String url = "http://" + server + ":" + port + "/api/realtime?scriptId=" + scriptId;
-        return HttpUtil.sendPost(url, "scriptId=" + scriptId);
+        String result = HttpUtil.sendGet(url);
+        if (result.length()> key.length()){
+            return getRealData(key, result, name, groups, gson);
+        }else{
+            return "[]";
+        }
     }
 
     /**

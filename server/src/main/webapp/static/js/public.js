@@ -541,6 +541,18 @@ function getRandomData(len){
     return data;
 }
 
+function getRealHistory(ip, name, type) {
+    url = "/monitor/graph/historyData?ip="+ip+"&name="+name+"&type="+type;
+    datas = eval(post({},url));
+    if(!datas){
+        return getRandomData(100);
+    }
+    if (datas.length > 100 ){
+        return datas.slice(datas.length-100, datas.length);
+    }
+    return datas;
+}
+
 /**
  *
  * @param server
@@ -567,6 +579,7 @@ function realtime_graph(id, server, groups, name) {
             });
         }
     }
+    var datas_t = eval(post({}, "/monitor/graph/all/realtime?server="+server+"&groups="+groups+"&name="+name))
     $('#'+id).highcharts({
         chart: {
             type: 'area',
@@ -583,16 +596,14 @@ function realtime_graph(id, server, groups, name) {
                         if(realtime=="0"){
                             return;
                         }
-//                                var x = (new Date()).getTime(), // current time
-//                                        y = Math.random();
-                        data = eval(post({}, "/monitor/graph/all/realtime?server="+server+"&groups="+groups+"&name="+name))
-                        if (!data){
+                        datas = datas_t
+                        if (!datas){
                             return;
                         }
                         value = ""
-                        for (i=0;i<data.length;i++){
-                            if(data[i]["name"] == name && data[i]["groups"] == groups ){
-                                value = data[i]["value"]
+                        for (i=0;i<datas.length;i++){
+                            if(datas[i]["name"] == name && datas[i]["groups"] == groups ){
+                                value = datas[i]["value"]
                             }
                         }
                         if(!value){
@@ -601,7 +612,11 @@ function realtime_graph(id, server, groups, name) {
 
                         x = (new Date()).getTime()
                         y = parseFloat(value)
+                        try{
                             series.addPoint([x, y], true, true);
+                            datas_t = eval(post({}, "/monitor/graph/all/realtime?server="+server+"&groups="+groups+"&name="+name))
+                        }catch(Exception){
+                        }
                     }, 5000);
                 }
             }
@@ -645,7 +660,7 @@ function realtime_graph(id, server, groups, name) {
         },
         series: [{
             name: '数量',
-            data: getRandomData(100)
+            data: getRealHistory(server,name,groups)
         }]
     });
 }
