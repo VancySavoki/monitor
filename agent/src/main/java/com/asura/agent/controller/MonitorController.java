@@ -484,6 +484,13 @@ public class MonitorController {
         if (SCRIPT_TIME == null) {
             return;
         }
+
+        // 防止停止监控 2017-02-04
+        if (SCRIPT_TIME.size()==0){
+            initMonitor();
+            return;
+        }
+
         MONITOR_LOCK.put("locked", DateUtil.getCurrTime());
         ArrayList<PushEntity> success = new ArrayList<>();
         ArrayList<PushEntity> faild = new ArrayList<>();

@@ -303,6 +303,7 @@ public class CacheController {
     @RequestMapping("configure/makeAllHostKey")
     @ResponseBody
     public String makeAllHostKey(){
+        Jedis jedis = redisUtil.getJedis();
         SearchMap searchMap = new SearchMap();
         searchMap.put("isValid",1);
         HashSet hostIds = new HashSet();
@@ -325,7 +326,8 @@ public class CacheController {
                 }
             }
             for (Map.Entry<String, HashSet> entry : hostMap.entrySet()) {
-                redisUtil.set(MonitorCacheConfig.cacheHostConfigKey + entry.getKey(), gson.toJson(entry.getValue()));
+                jedis.set(RedisUtil.app+"_"+MonitorCacheConfig.cacheHostConfigKey + entry.getKey(), gson.toJson(entry.getValue()));
+
             }
 
             if(m.getGname()!=null){
@@ -338,7 +340,7 @@ public class CacheController {
                 }
             }
             for (Map.Entry<String, HashSet> entry : groupMap.entrySet()) {
-                redisUtil.set(MonitorCacheConfig.cacheGroupConfigKey + entry.getKey(), gson.toJson(entry.getValue()));
+                jedis.set(RedisUtil.app+"_"+MonitorCacheConfig.cacheGroupConfigKey + entry.getKey(), gson.toJson(entry.getValue()));
             }
         }
         String allHost = gson.toJson(hostIds);
@@ -357,10 +359,11 @@ public class CacheController {
     public String cacheGroups(){
         Map map = new HashMap();
         PagingResult<CmdbResourceGroupsEntity> result = cmdbResourceGroupsService.findAll(null,PageResponse.getPageBounds(10000000, 1));
-        SearchMap searchMap = new SearchMap();
+        SearchMap searchMap; 
         for (CmdbResourceGroupsEntity entity:result.getRows()){
             HashSet<String> hosts = new HashSet<>();
             map.put(entity.getGroupsId(), entity.getGroupsName());
+            searchMap = new SearchMap();
             searchMap.put("groupsId", entity.getGroupsId());
             List<CmdbResourceServerEntity> servers = service.getDataList(searchMap, "selectAllIp");
             for (CmdbResourceServerEntity serverEntity:servers){

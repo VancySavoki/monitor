@@ -18,6 +18,20 @@ function post(paramter , url){
     return result;
 }
 
+function post_get(url) {
+    var result = "";
+    $.ajax({
+            type:"POST",
+            url:url,
+            data: {},
+            async:true,
+            success:function(data){
+                    result = data;
+            }
+    });
+}
+
+
 //获取from数据
 function get_form_data(){
  var result = {}

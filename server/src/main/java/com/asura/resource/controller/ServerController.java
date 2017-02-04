@@ -332,7 +332,6 @@ public class ServerController {
         // 获取每个id对应的ip地址
         jedis.set(app+"_"+MonitorCacheConfig.cacheHostIdToIp+ c.getServerId(), c.getIpAddress());
         jedis.close();
-        cacheController.makeAllHostKey();
         indexController.logSave(request,"保存资产数据 " + entity.getIpAddress());
         return ResponseVo.responseOk(null);
     }
@@ -402,6 +401,7 @@ public class ServerController {
         redisUtil.del(MonitorCacheConfig.cacheHostIdToIp+id);
         service.delete(resourceServerEntity);
         indexController.logSave(request,"删除资产数据 " + gson.toJson(resourceServerEntity));
+        cacheController.cacheGroups();
         return "ok";
     }
 
