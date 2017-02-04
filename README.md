@@ -14,6 +14,10 @@
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img2.png)
 <br>
+<b>报警信息查看</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img9.png)
+<br>
 <b>图像展示</b></br>
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img3.png)
@@ -25,6 +29,18 @@
 <b>报警统计</b></br>
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img5.png)
+<br>
+<b>指标报警分析报表</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img6.png)
+<br>
+<b>监控添加页面</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img7.png)
+<br>
+<b>脚本添加页面</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img8.png)
 <br>
 
 <font color="red">
