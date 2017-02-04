@@ -354,14 +354,16 @@ public class AllGraphController {
         String  key = groups + "." + name;
         String scriptId;
         if (!indexMap.containsKey(key)) {
-            scriptId = redisUtil.get(MonitorCacheConfig.cacheIndexScript + key);
+            String dir = dataDir + separator + "graph" + separator +"index" +separator;
+            dir = dir + key + separator + "id";
+            dir = FileRender.replace(dir);
+            scriptId = FileRender.readLastLine(dir);
             indexMap.put(key, scriptId);
         }else{
             scriptId = indexMap.get(key);
         }
         String url = "http://" + server + ":" + port + "/api/realtime?scriptId=" + scriptId;
-        System.out.println(url);
-        return HttpUtil.sendPost(url, "scriptId=12");
+        return HttpUtil.sendPost(url, "scriptId=" + scriptId);
     }
 
     /**
