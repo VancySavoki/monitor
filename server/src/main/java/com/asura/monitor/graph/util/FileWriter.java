@@ -4,7 +4,10 @@ import com.asura.monitor.graph.entity.PushEntity;
 import com.asura.util.DateUtil;
 import org.apache.log4j.Logger;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 
 /**
  * <p></p>
@@ -59,15 +62,6 @@ public class FileWriter {
      *         文件内容
      */
     public static void writeFile(String file, String content, boolean append) {
-//        file = file.replace("..", "");
-//        makeDirs(file);
-//        try {
-//            java.io.FileWriter fileWriter = new java.io.FileWriter(file, append);
-//            fileWriter.write(content + "\n");
-//            fileWriter.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
         // 防止等待磁盘
         FileThread thread = new FileThread(file, content, append);
         thread.start();
@@ -268,6 +262,32 @@ public class FileWriter {
             return data.trim();
         }catch (Exception e){
             return "";
+        }
+    }
+
+    /**
+     * 删除文件执行的行数
+     * @param file
+     * @param delNumber
+     */
+    public static void deleteFileLine(String file, int delNumber){
+        try {
+            int lineDel = delNumber;
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            StringBuffer sb = new StringBuffer(4096);
+            String temp = null;
+            int line = 0;
+            while ((temp = br.readLine()) != null) {
+                line++;
+                if (line == lineDel) continue;
+                sb.append(temp).append("\n");
+            }
+            br.close();
+            BufferedWriter bw = new BufferedWriter(new java.io.FileWriter(file));
+            bw.write(sb.toString());
+            bw.close();
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

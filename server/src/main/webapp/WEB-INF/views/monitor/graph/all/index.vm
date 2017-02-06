@@ -166,8 +166,11 @@
                 <option value="3">3d</option>
                 <option value="7">7d</option>
                 <option value="30">1m</option>
-                <option value="">0.5y</option>
-                <option value="">1y</option>
+                <option value="60">2m</option>
+                <option value="120">4m</option>
+                <option value="180">6m</option>
+                <option value="240">8m</option>
+                <option value="360">1y</option>
             </select>&nbsp;&nbsp;
         </div>
         <div class="input-group col-md-6 pull-right" style="margin-top:-33px;">
@@ -259,7 +262,7 @@
         $('#selectIp').html(html)
     }
 
-    function getCheckValue(img,ip) {
+    function getCheckValue(img,ip, dayNumber) {
         if(!ip){
             ip="$!{ip}"
         }
@@ -285,14 +288,19 @@
         $.cookie(cookieName, chk_value);
 
         type = $('#img_type').val()
+        urls = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT;
         if(type){
-            url = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT+"&type=1";
+            url = urls+"&type=1";
         }else{
-            url = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT;
+            url = urls;
         }
         // 小图显示
         if("$!{bind}"){
-            url = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT+"$!{bind}";
+            url = urls+"$!{bind}";
+        }
+        // 获取压缩数据
+        if (dayNumber){
+            url = urls+"&dayNumber=" + dayNumber;
         }
 
         $('#iframepage').attr("src",url);
@@ -323,10 +331,15 @@
      */
     function timearea(value) {
         var d = new Date();
-        var str = d.getFullYear() +"-" + (d.getMonth()+1) +"-" +d.getDate();
-        $('#startSendTime').val( time_count(str, value))
-        $('#endSendTime').val(str)
-        getCheckValue();
+        var str = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+        //  小于30天直接获取数据
+        if (value < 30) {
+           $('#startSendTime').val(time_count(str, value))
+           $('#endSendTime').val(str)
+           getCheckValue();
+            return
+        }
+        getCheckValue("","", value)
     }
 
     setTimeout(function () {

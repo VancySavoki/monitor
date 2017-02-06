@@ -41,7 +41,7 @@ realtime = $.cookie("is_realtime");
             if(realtime=="1") {
                 realtime_graph('${name}${n.replace('---','').replace(" ","").replace(".","_")}', "$!{ip}", "$name", "$n")
             }else{
-                graph_min("1ab394", '${name}${n.replace('---','').replace(" ","").replace(".","_")}', "${name} ${n.replace("SLASH","/").replace('---',' ')}", "${name} ${n.replace("SLASH","/").replace('---',' ')}", "/monitor/graph/historyData?ip=${ip}&name=${n}&type=$name","","$!{startT}","$!{endT}")
+                graph_min("1ab394", '${name}${n.replace('---','').replace(" ","").replace(".","_")}', "${name} ${n.replace("SLASH","/").replace('---',' ')}", "${name} ${n.replace("SLASH","/").replace('---',' ')}", "/monitor/graph/historyData?ip=${ip}&name=${n}&dayNumber=$!{dayNumber}&type=$name","","$!{startT}","$!{endT}")
             }
         }
         #end
