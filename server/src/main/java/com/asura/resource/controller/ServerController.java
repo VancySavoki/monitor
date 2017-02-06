@@ -28,6 +28,7 @@ import com.asura.resource.service.CmdbResourceServerTypeService;
 import com.asura.resource.service.CmdbResourceServiceService;
 import com.asura.resource.service.CmdbResourceUserService;
 import com.asura.util.DateUtil;
+import com.asura.util.LdapAuthenticate;
 import com.asura.util.PermissionsCheck;
 import com.asura.util.RedisUtil;
 import com.asura.util.network.ThreadPing;
@@ -382,7 +383,7 @@ public class ServerController {
     /**
      * 删除资产数据
      * @return
-    */
+     */
     @RequestMapping(value = "delete", produces = {"application/json;charset=UTF-8"})
     @ResponseBody
     public String delete(int id, HttpServletRequest request) {
