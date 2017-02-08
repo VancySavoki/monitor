@@ -29,11 +29,9 @@ import static com.asura.monitor.graph.util.FileRender.getSubDir;
 public class MergerThread extends Thread {
 
     private List<CmdbResourceServerEntity> ips;
-    private int dayNumber;
 
-    public MergerThread(List<CmdbResourceServerEntity> ips, int dayNumber) {
+    public MergerThread(List<CmdbResourceServerEntity> ips) {
         this.ips = ips;
-        this.dayNumber = dayNumber;
     }
 
     public void run() {

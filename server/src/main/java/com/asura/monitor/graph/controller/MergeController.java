@@ -39,13 +39,13 @@ public class MergeController {
      */
     @RequestMapping("merger")
     @ResponseBody
-    public String merger(String ip, int dayNumber) {
+    public String merger(String ip) {
         SearchMap searchMap = new SearchMap();
         if (ip != null && ip.length() > 6) {
             searchMap.put("ipAddress", ip);
         }
         List<CmdbResourceServerEntity> ips = serverService.getDataList(searchMap, "selectAllIp");
-        MergerThread mergerThread = new MergerThread(ips, dayNumber);
+        MergerThread mergerThread = new MergerThread(ips);
         mergerThread.start();
         return "ok";
     }
