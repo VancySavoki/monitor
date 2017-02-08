@@ -19,18 +19,19 @@ function post(paramter , url){
 }
 
 function post_get(url) {
-    var result = "";
-    $.ajax({
-            type:"POST",
-            url:url,
-            data: {},
-            async:true,
-            success:function(data){
-                    result = data;
+    xml = GenXMLData(tableName, fieldID, "", "");
+    contentTD.innerHTML = content;
+    var XmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+    XmlHttp.onreadystatechange = function () {
+        if (XmlHttp.readyState == 4) {
+            if (XmlHttp.status == 200) {
+                firstPost = true;
             }
-    });
+        }
+    }
+    XmlHttp.open("post", url, true);
+    XmlHttp.send(xml);
 }
-
 
 //获取from数据
 function get_form_data(){
@@ -428,7 +429,7 @@ function graph_min(color, id, title, ytitle, url, chartype,lstartT,lendT) {
             }
         },
         series: [{
-            name: ytitle +"1",
+            name: ytitle ,
             data: eval(post({}, url+"&startT="+startT+"&endT="+endT)),
         }]
     });

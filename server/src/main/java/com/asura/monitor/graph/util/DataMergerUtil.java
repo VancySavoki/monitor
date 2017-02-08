@@ -42,7 +42,7 @@ public class DataMergerUtil extends Thread {
     // 天数
     private int dayNumber = 1;
     // 最多显示数据
-    private int maxNumber = 1500;
+    private int maxNumber = 700;
     // 合并条数
     private int mergerNumber;
     // 文件名
@@ -59,23 +59,55 @@ public class DataMergerUtil extends Thread {
     public void run() {
         init();
         // 月数据
-        if (dayNumber < 30) {
+        int rows = FileRender.getFileRows(fileName);
+        if(rows < maxNumber ) {
             mergerStart();
-        }else{
+        }else {
             getGt30DayData();
         }
     }
 
-    void init(){
+    void init() {
         createDataFile();
         setBaseNumber();
         setMergerNumber();
     }
 
+    void mergerLastYear() {
+        String[] lastDate = DateUtil.getLastNDay(3).split("-");
+        String year = lastDate[0];
+        String dir = dataDir + separator + "graph" + separator + ip + separator + groups + separator + year + separator + "day" + dayNumber + separator;
+        FileWriter.writeFile(fileName, FileRender.readFile(dir + name), false);
+    }
+
     void mergerStart() {
-        // 初始化文件数据
-        FileWriter.writeFile(fileName, "", false);
-        dataMerger();
+        int rows = FileRender.getFileRows(fileName);
+        // 如果数据不足，就写入数据
+        if (rows <= maxNumber) {
+            dataMerger();
+            return;
+        }
+
+        // 如果时间是01月01日志，那么数据就把去年的复制过来
+        if (DateUtil.getDate(DateUtil.DATE_FORMAT).contains("01-01")) {
+            mergerLastYear();
+            return;
+        }
+
+        Double value = 1.0;
+        // 当数据大于最大数量后，开始实现追加和删除第一行，环形写入数据
+        if (rows >= maxNumber) {
+            // 获取每天数据量
+            ArrayList<ArrayList> datas = readHistory(ip, groups, name, getYestDay(), getYestDay(), null);
+            for (ArrayList<Double> d : datas) {
+                    value += Double.valueOf(d.get(1));
+            }
+            value = value / datas.size();
+            String writeData = DateUtil.getDateStampInteter() + "000 " + df.format(value);
+            FileWriter.writeFile(fileName, writeData, true);
+            // 每次写入一行，删除一行
+            FileWriter.deleteFileLine(fileName, 1);
+        }
     }
 
     // 合并数据
@@ -83,6 +115,7 @@ public class DataMergerUtil extends Thread {
         int counter = 0;
         Double value = 1.0;
         String writeData = "";
+        this.mergerNumber = datas.size() / maxNumber ;
         for (ArrayList<Double> data : datas) {
             // 当合并条数为1时，不做合并
             if (mergerNumber == 1) {
@@ -134,16 +167,11 @@ public class DataMergerUtil extends Thread {
             return;
         }
 
-
         // 如果时间是01月01日志，那么数据就把去年的复制过来
-        if (DateUtil.getDate(DateUtil.DATE_FORMAT).contains("01-01")){
-            String[] lastDate = DateUtil.getLastNDay(3).split("-");
-            String year = lastDate[0];
-            String dir = dataDir + separator + "graph" + separator + ip + separator + groups + separator + year + separator + "day" + dayNumber + separator;
-            FileWriter.writeFile(fileName, FileRender.readFile(dir+name), false);
+        if (DateUtil.getDate(DateUtil.DATE_FORMAT).contains("01-01")) {
+            mergerLastYear();
             return;
         }
-
 
         String[] tempData;
         Double value = 1.0;
@@ -159,7 +187,7 @@ public class DataMergerUtil extends Thread {
                 }
             }
             value = value / interval;
-            writeData = DateUtil.getDateStampInteter() + "000 " + value;
+            writeData = DateUtil.getDateStampInteter() + "000 " + df.format(value);
             FileWriter.writeFile(fileName, writeData, true);
             // 每次写入一行，删除一行
             FileWriter.deleteFileLine(fileName, 1);
@@ -168,25 +196,11 @@ public class DataMergerUtil extends Thread {
 
     // 输入读取和合并
     void dataMerger() {
-        ArrayList<String> dates = getDateList();
+        String startT = getLastNDay(dayNumber);
+        String endT = getYestDay();
         ArrayList<ArrayList> datas;
-        int count = 0;
-        String startT = "";
-        String endT = "";
-
-        for (String start : dates) {
-            // 每5天读取一次数据
-            if (count % 5 == 0) {
-                endT = start;
-                datas = readHistory(ip, groups, name, startT, endT, null);
-                merger(datas);
-                startT = start;
-            }
-            if (count == 0) {
-                startT = start;
-            }
-            count += 1;
-        }
+        datas = readHistory(ip, groups, name, startT, endT, null);
+        merger(datas);
     }
 
     // 获取数据读取的时间段

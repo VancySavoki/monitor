@@ -327,7 +327,6 @@ public class CacheController {
             }
             for (Map.Entry<String, HashSet> entry : hostMap.entrySet()) {
                 jedis.set(RedisUtil.app+"_"+MonitorCacheConfig.cacheHostConfigKey + entry.getKey(), gson.toJson(entry.getValue()));
-
             }
 
             if(m.getGname()!=null){
@@ -359,11 +358,11 @@ public class CacheController {
     public String cacheGroups(){
         Map map = new HashMap();
         PagingResult<CmdbResourceGroupsEntity> result = cmdbResourceGroupsService.findAll(null,PageResponse.getPageBounds(10000000, 1));
-        SearchMap searchMap; 
+        SearchMap searchMap;
         for (CmdbResourceGroupsEntity entity:result.getRows()){
             HashSet<String> hosts = new HashSet<>();
-            map.put(entity.getGroupsId(), entity.getGroupsName());
             searchMap = new SearchMap();
+            map.put(entity.getGroupsId(), entity.getGroupsName());
             searchMap.put("groupsId", entity.getGroupsId());
             List<CmdbResourceServerEntity> servers = service.getDataList(searchMap, "selectAllIp");
             for (CmdbResourceServerEntity serverEntity:servers){
@@ -380,14 +379,13 @@ public class CacheController {
     /**
      * 生产监控修改配置
      */
-    void setDefaultMonitorChange(){
+    public void setDefaultMonitorChange(){
         Jedis jedis = redisUtil.getJedis();
         String dateDir = FileWriter.dataDir;
         String separator = FileWriter.separator;
         File[] files = FileRender.getDirFiles(dateDir+separator+"monitor");
         for (File file:files) {
             String key = RedisUtil.app + "_" + MonitorCacheConfig.cacheDefaultChangeQueue + file.getName();
-            System.out.println(key);
             jedis.del(key);
             jedis.lpush(key, "1");
         }

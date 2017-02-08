@@ -75,6 +75,33 @@ public class AllGraphController {
         return "/monitor/graph/all/index";
     }
 
+    /**
+     * 时间段图像显示
+     * @param ip
+     * @param groups
+     * @param name
+     * @param model
+     * @return
+     */
+    @RequestMapping("listImg")
+    public String sub(String ip, String groups, String name, Model model) {
+        model.addAttribute("name", name);
+        model.addAttribute("n", groups);
+        ArrayList arrayList = new ArrayList();
+        arrayList.add(3);
+        arrayList.add(7);
+        arrayList.add(15);
+        arrayList.add(30);
+        arrayList.add(60);
+        arrayList.add(90);
+        arrayList.add(120);
+        arrayList.add(180);
+        arrayList.add(240);
+        arrayList.add(360);
+        model.addAttribute("days", arrayList);
+        model.addAttribute("ip", ip);
+        return "/monitor/graph/all/listImg";
+    }
 
     /**
      * 所有图像入口

@@ -20,6 +20,7 @@ import com.asura.monitor.configure.service.MonitorItemService;
 import com.asura.monitor.configure.service.MonitorMessageChannelService;
 import com.asura.monitor.configure.service.MonitorScriptsService;
 import com.asura.monitor.configure.service.MonitorTemplateService;
+import com.asura.monitor.configure.thread.MakeCacheThread;
 import com.asura.util.DateUtil;
 import com.asura.util.HttpUtil;
 import com.asura.util.LdapAuthenticate;
@@ -34,8 +35,8 @@ import redis.clients.jedis.Jedis;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +93,7 @@ public class SaveController {
     private PermissionsCheck permissionsCheck;
     private Gson gson = new Gson();
     private RedisUtil redisUtil = new RedisUtil();
+
     @Autowired
     private LdapAuthenticate ldapAuthenticate;
 
@@ -318,8 +320,8 @@ public class SaveController {
         redisUtil.set(MonitorCacheConfig.cacheConfigureKey+entity.getConfigureId(),gson.toJson(entity));
         makeHostMonitorTag(entity);
         setUpdateMonitor(entity);
-        cacheController.makeAllHostKey();
-        cacheController.setDefaultMonitorChange();
+        MakeCacheThread cacheThread  = new MakeCacheThread(cacheController);
+        cacheThread.start();
         return ResponseVo.responseOk(null);
     }
 
@@ -477,7 +479,7 @@ public class SaveController {
     /**
      * 删除监控
      * @return
-    */
+     */
     @RequestMapping("configure/delete")
     @ResponseBody
     public String deleteConfigure(int id, HttpServletRequest request){
@@ -508,9 +510,8 @@ public class SaveController {
             }
         }
         configureService.delete(configureEntity);
-        redisUtil.del(MonitorCacheConfig.cacheConfigureKey);
+        redisUtil.del(MonitorCacheConfig.cacheConfigureKey+id);
         indexController.logSave(request, "删除监控配置" + gson.toJson(configureEntity));
         return "ok";
-  }
-
+    }
 }

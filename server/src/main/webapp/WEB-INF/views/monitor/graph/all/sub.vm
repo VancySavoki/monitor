@@ -16,6 +16,8 @@
                  #else width: 31%; #end margin:5px;">
                 <div class="ibox float-e-margins">
                     <div class="title-img">
+                           <span class="default pull-right" onclick="reload_day_img('$n', '$name','$ip')"><i
+                                   class="fa fa-history" style="font-size:19px;margin-top:10px;margin-right: 10px;"></i></span>
                         <span class="default pull-right" onclick="load${name}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(1);"><i
                                 class="fa fa-search-plus" style="font-size:19px;margin-top:10px;margin-right: 10px;"></i></span>
                         <h5 align="center" style="margin-top: 10px;margin-left: 10px;">${name}&nbsp;${n.replace("SLASH","/").replace('---','&nbsp;')}</h5>
@@ -30,6 +32,12 @@
 
 </div>
 <script>//Flot Multiple Axes Line Chart
+
+function reload_day_img(name, groups, ip) {
+    url = "/monitor/graph/all/listImg?ip="+ip+"&name="+name+"&groups="+groups;
+    window.location.href = url;
+}
+
 realtime = $.cookie("is_realtime");
 
     #foreach($name in $names)

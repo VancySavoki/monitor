@@ -22,6 +22,10 @@
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img3.png)
 <br>
+<b>更多时间段图像(缩小后的)</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img10.png)
+<br>
 <b>系统概览</b></br>
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img4.png)
