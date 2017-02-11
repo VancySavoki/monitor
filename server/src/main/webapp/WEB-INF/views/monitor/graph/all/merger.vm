@@ -1,7 +1,7 @@
 <!DOCTYPE html>
     #include("/index/include.vm")
 <script src="/static/js/plugins/highcharts.js"></script>
-<title>监控多数据展示</title>
+<title>多维度数据查看</title>
 
 <div id="wrappe1r">
     <div class="ibox-title" style="margin-top: 0px;border: solid 1px #f0f0f0">
@@ -35,7 +35,7 @@ function getDatas() {
         #foreach($name in $names)
             #foreach($n in $types.get($name))
                 d = {}
-                d["name"] = "${ipadd} ${n}";
+                d["name"] = '${ipadd.replace("10.16","192.168")} ${n}';
                 d["data"] = eval(post({}, "/monitor/graph/historyData?ip=${ipadd}&name=${n}&type=${name}"));
                 datas.push(d)
             #end
@@ -78,7 +78,7 @@ function graphAll() {
         title: {
             style: {
                 color: '#E0E0E3',
-                textTransform: 'uppercase',
+                //textTransform: 'uppercase',
                 fontSize: '20px'
             }
         },
@@ -90,7 +90,7 @@ function graphAll() {
         },
         xAxis: {
             type: 'datetime',
-            tickPixelInterval: 110,
+            tickPixelInterval: 113,
             gridLineColor: '#f0f071',
             labels: {
                 style: {
@@ -268,7 +268,7 @@ function graphAll() {
         },
 
         title: {
-            text: '多数据展示',
+            text: '多维数据展示',
         },
 
 //        subtitle: {
@@ -276,19 +276,18 @@ function graphAll() {
 //        },
 
         xAxis: {
-            tickInterval: 7 * 24 * 3600 * 1000, // one week
             tickWidth: 1,
             lineWidth: 1,
             labels: {
                 align: 'left',
                 x: 3,
-                y: 45,
+                y: 55,
             }
         },
 
         yAxis: [{ // left y axis
             title: {
-                text: null
+                text: ""
             },
             labels: {
                 align: 'left',
@@ -297,26 +296,12 @@ function graphAll() {
                 format: '{value:.,0f}'
             },
             showFirstLabel: false
-        }, { // right y axis
-            linkedTo: 1,
-            gridLineWidth: 1,
-            opposite: true,
-            title: {
-                text: null
-            },
-            labels: {
-                align: 'right',
-                x: -3,
-                y: 16,
-                format: '{value:.,0f}'
-            },
-            showFirstLabel: false
-        }],
+        },
+        ],
 
         legend: {
-            enabled: true,
-            verticalAlign: 'bottom',
-            floating: true,
+            //verticalAlign: 'bottom',
+            //floating: true,
             y: 0,
             align: "left",
             borderWidth: 0
@@ -373,4 +358,3 @@ function loadimg() {
 loadimg();
 </script>
 </body>
-
