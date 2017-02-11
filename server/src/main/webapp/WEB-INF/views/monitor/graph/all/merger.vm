@@ -35,7 +35,7 @@ function getDatas() {
         #foreach($name in $names)
             #foreach($n in $types.get($name))
                 d = {}
-                d["name"] = '${ipadd.replace("10.16","192.168")} ${n}';
+                d["name"] = '${ipadd} ${n}';
                 d["data"] = eval(post({}, "/monitor/graph/historyData?ip=${ipadd}&name=${n}&type=${name}"));
                 datas.push(d)
             #end
