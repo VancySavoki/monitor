@@ -38,6 +38,9 @@ public class MonitorCacheConfig {
     // 存放脚本的信息的key cache_script_scriptId
     public static String cacheScriptKey = "cache_script_";
 
+    // 存放脚本的信息的key cache_script_scriptId
+    public static String cacheScriptIdKey = "cache_script_id_";
+
     // 联系组的缓存key，存放报警联系组的 cache_contact_group_groupId
     public static String cacheContactGroupKey = "cache_contact_group_";
 

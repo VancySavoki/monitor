@@ -221,7 +221,8 @@ public class SaveController {
             entity.setScriptsId(id);
             scriptsService.save(entity);
         }
-        redisUtil.set(MonitorCacheConfig.cacheScriptKey + entity.getScriptsId(), gson.toJson(entity));
+//        redisUtil.set(MonitorCacheConfig.cacheScriptKey + entity.getScriptsId(), gson.toJson(entity));
+        redisUtil.setex(MonitorCacheConfig.cacheScriptIdKey+ entity.getScriptsId(),600, gson.toJson(entity));
         updateHostUpdate("script");
         cacheController.setDefaultMonitorChange();
         return ResponseVo.responseOk(null);
