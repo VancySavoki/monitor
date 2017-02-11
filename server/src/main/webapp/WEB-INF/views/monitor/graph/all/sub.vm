@@ -39,7 +39,7 @@ function reload_day_img(name, groups, ip) {
 }
 
 realtime = $.cookie("is_realtime");
-
+is_range = $.cookie("is_range");
     #foreach($name in $names)
         #foreach($n in $types.get($name))
         function load${name}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(zoom) {
@@ -48,6 +48,9 @@ realtime = $.cookie("is_realtime");
             }
             if(realtime=="1") {
                 realtime_graph('${name}${n.replace('---','').replace(" ","").replace(".","_")}', "$!{ip}", "$name", "$n")
+            }else if(is_range == "1"){
+                stock_chart("1ab394", '${name}${n.replace('---','').replace(" ","").replace(".","_")}', "${name} ${n.replace("SLASH","/").replace('---',' ')}", "${name} ${n.replace("SLASH","/").replace('---',' ')}", "/monitor/graph/historyData?ip=${ip}&name=${n}&dayNumber=$!{dayNumber}&type=$name","","$!{startT}","$!{endT}")
+
             }else{
                 graph_min("1ab394", '${name}${n.replace('---','').replace(" ","").replace(".","_")}', "${name} ${n.replace("SLASH","/").replace('---',' ')}", "${name} ${n.replace("SLASH","/").replace('---',' ')}", "/monitor/graph/historyData?ip=${ip}&name=${n}&dayNumber=$!{dayNumber}&type=$name","","$!{startT}","$!{endT}")
             }
@@ -122,8 +125,6 @@ function stock_chart(color, id, title, ytitle, url, chartype,lstartT,lendT) {
         startT=lstartT;
         endT = lendT;
     }
-    console.log(startT)
-    console.log(endT)
     lineWidth = 3
     lineWidthO = 5
     if(startT){

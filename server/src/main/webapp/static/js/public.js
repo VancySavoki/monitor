@@ -603,12 +603,15 @@ function realtime_graph(id, server, groups, name) {
             zoomType: 'x',
             events: {
                 load: function () {
-
+                   var timer;
                     // set up the updating of the chart each second
                     var series = this.series[0];
-                    setInterval(function () {
+                    timer = setInterval(function () {
                         realtime = $.cookie("is_realtime");
-                        if(realtime=="0"){
+                        if(realtime=="0" || !realtime || realtime==""){
+                            if (timer){
+                                clearInterval(timer)
+                            }
                             return;
                         }
                         datas = datas_t

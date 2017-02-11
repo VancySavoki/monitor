@@ -11,15 +11,25 @@
 </head>
 <script>
     function imageSelect(mselect, realtime) {
-
+        $.cookie("is_range");
         if(mselect){
-          $('#show_graph_select_ip').modal("toggle")
+            $.cookie("is_realtime");
+            html = getGroups(1)
+            $('#select_groups_id').html(html)
+            $('.selectpicker').selectpicker({
+                'selectedText': 'cat'
+            });
+            $('#show_graph_select_ip').modal("toggle")
+            return
         }else{
+            $.cookie("is_all_select","");
             $('#show_graph_imgages').modal("toggle")
         }
         $.cookie("is_realtime","0");
         if(realtime){
+
             $.cookie("is_realtime", 1);
+            return
         }
 
     }
@@ -33,20 +43,26 @@
         }
         return false;
     }
-    function setIpAddress(value) {
-        if (!f_check_IP('add_ip_address_id')){
+    function setIpAddress(value, select) {
+        if (!f_check_IP('add_ip_address_id') && !select){
             parent.layer.msg("ip地址格式有误",  {icon:2})
             return;
         }
         old = $('#select_all_ip_textarea').val();
-        olds = old.split(",")
+        olds = old.split("\n")
         news = ""
+        is_exists = false
         for (i=0;i<olds.length;i++){
+            if(olds[i].length<5){continue}
             if (olds[i] != value ) {
                 news += olds[i] + "\n"
+            }else{
+                is_exists = true
             }
         }
-        news += value;
+        if(!is_exists){
+            news += value
+        }
         $('#select_all_ip_textarea').val(news);
         $.cookie("select_all_ip_textarea", news);
     }
@@ -55,10 +71,13 @@
     function selectAllImages() {
         parent.layer.msg("已选择服务器" + $('#select_all_ip_textarea').val(),  {icon:1})
         $.cookie("is_all_select",1);
+        $.cookie("is_range","");
         $('#show_graph_select_ip').modal("toggle");
         $('#show_graph_imgages').modal('toggle')
+
     }
     function clearAllImages() {
+        $.cookie("is_range","");
         $.cookie("is_all_select","");
         $.cookie("select_all_ip_textarea", "");
         $('#show_graph_select_ip').modal("toggle");
@@ -73,6 +92,12 @@
         margin-top:0px;
         margin-left: -15px;
         margin-right: -15px;
+    }
+    .search-ip{
+        border-radius:0;
+        border-top:0px;
+        margin-left:-15px;
+        height:32px;
     }
 </style>
 
@@ -99,37 +124,41 @@
                 </div>
                 <br>
                 <div class="form-group">
-                    <div class="col-sm-9" style="float: left;">
-                        <input class="form-control" onchange="setIpAddress($(this).val())" id="add_ip_address_id" style="float:left;" placeholder="输入完整IP地址">
+                    <div class="col-sm-12" style="float: left;">
+                        <div class="col-sm-12" >
+                            <input class="form-control col-sm-7" onchange="setIpAddress($(this).val())" id="add_ip_address_id" style="float:left;" placeholder="输入完整IP地址">
+                        </div>
+                        <div class="col-sm-12" ></p></div>
+                        <div class="col-sm-6" style="float: left;">
+                            <div  id="select_groups_id"></div>
+                        </div>
+                        <div class="col-sm-6" style="float: left;">
+                            <select  class="selectpicker bla bla bli form-control " data-live-search="true"  id="select_groups_ip" onChange="setIpAddress($(this).val(), 1)">
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-12" ></p></div>
+                    <div class="col-sm-12" >
+                        <textarea class="form-control" readonly rows="12" id="select_all_ip_textarea">$!{ip}</textarea>
                     </div>
                 </div>
-                <div class="col-sm-11"><br> </div>
-                <br>
-                <div class="form-group">
-                    <div class="col-sm-12" style="float: left;">
-                     <textarea class="form-control" readonly rows="12" id="select_all_ip_textarea">$!{ip}</textarea>
-                        </div>
-                  </div>
-                <div class="col-sm-7" style="float: left;"></div>
-                <div class="col-sm-5" style="float: left;">
-                <div style="margin-top: -80px;margin-bottom: -10px;" class="input-group-btn">
-
-              <span class="input-group-btn">
-                  <span class="input-group-btn">
-                    <button style="margin-top: 12px;" onclick="clearAllImages()" class="btn btn-default btn-lg" type="button">
-                        <i class="fa fa-trash-o"></i>&nbsp;取消
-                    </button></span>
-                    <span class="input-group-btn">
-                      <button style="margin-bottom: 15px;margin-top: 27px;margin-left: 5px;"
-                            onclick="selectAllImages()" class="btn btn-primary btn-lg"
-                            type="button">
+                <div class="col-sm-12" >
+                      <span class="input-group-btn">
+                       <span class="input-group-btn">
+                       <button style="margin-top: 12px;" onclick="clearAllImages()" class="btn btn-default btn-lg" type="button">
+                           <i class="fa fa-trash-o"></i>&nbsp;取消
+                       </button></span>
+                       <span class="input-group-btn">
+                        <button style="margin-bottom: 15px;margin-top: 27px;margin-left: 5px;"
+                                onclick="selectAllImages()" class="btn btn-primary btn-lg"
+                                type="button">
                         <i class="fa fa-area-chart"></i>&nbsp;确定
-                    </button>
-                  </span>
-                  </div>
+                       </button>
+                      </span>
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <div id="wrappe1r">
@@ -143,19 +172,11 @@
         <input id="is_all_select" type="hidden">
         <div class="col-md-4 pull-left" style="float:left;margin-left: -10%;">
             <span>#if($ip)$!{ip}#else
-              <script>
-                  url = "/resource/configure/groups/listData?draw=1&length=1000&start=1";
-                  result = post({},url);
-                  data = result["data"]
-                  html = "<select style='height: 32px;border: none;margin-top: -9px;;' onchange='getIp($(this).val())'>"
-                  for(i=0;i<data.length;i++){
-                        html += "<option value='"+data[i]["groupsName"]+"'>"+data[i]["groupsName"]+"</option>"
-                  }
-                  html += "</select>"
-                  document.write(html)
+                <script>
+                  document.write(getGroups())
               </script>
             #end
-            &nbsp;</span>
+                &nbsp;</span>
         </div>
         <div class="col-md-4 pull-left" style="float:left;margin-left: -24%;">
             <select  onchange="changeSelect($(this).val())" id="selectIp" style="border: none;height: 35px;border:1px solid #f0f0f0;margin-top: -10px;"><option></option></option></select>
@@ -183,25 +204,56 @@
         <div style="margin-top: 5px;"><p>&nbsp;</p></div>
         <div class="input-group">
             <div class="input-group">
-                <input type="text" class="form-control" id="search_ip" placeholder="输入IP地址">
-                <span class="input-group-btn"> <button type="button" onclick="toPage($('#search_ip').val())" class="btn  btn-primary">看图
+                <input type="text" class="form-control" id="search_ip" onkeyup="getIp('',$(this).val())" placeholder="输入IP地址">
+                <div class="col-md-2" id="show_search_ip" style="display:none;position:absolute;background-color:#fefefe;margin-top:30px;">
+
+                </div>
+                <span class="input-group-btn"> <button type="button" onclick="to_min_image($('#search_ip').val())" class="btn  btn-primary">看图
                 </button> </span>
                   <span class="input-group-btn" >
                       <button type="button" style="margin-left: 10px;" onclick="toPage($('#search_ip').val(),1)" class="btn btn-outline btn-warning">区间图</button>
-                      <button type="button" style="margin-left: 10px;" onclick="window.location='/monitor/graph/all/index?ip=$!{ip}&type=bind'" class="btn btn-outline btn-danger">小图</button>
+                      <button type="button" style="margin-left: 10px;" onclick="to_min_image()" class="btn btn-outline btn-danger">小图</button>
                       <button type="button" style="margin-left: 10px;" onclick="imageSelect(1);" class="btn btn-outline btn-success">多维度选择</button>
                       <button type="button" style="margin-left: 10px;" onclick="imageSelect('','1');" class="btn btn-outline btn-default">实时查看</button>
                   </span>
             </div></div>
         <iframe src="" name="imgiframe" id="iframepage" frameborder="0" width="100%" scrolling="no" marginheight="0" marginwidth="0" onLoad="iFrameHeight()"></iframe>
 
-</div>
+    </div>
 </div>
 </div>
 </div>
 <input type="hidden" id="select_ip_address">
 <input type="hidden" id="img_type">
 <script type="text/javascript" language="javascript">
+
+    function getGroups(isSelect) {
+        url = "/resource/configure/groups/listData?draw=1&length=1000&start=1";
+        result = post({},url);
+        data = result["data"]
+        if(isSelect){
+            html = '<select class="selectpicker bla bla bli form-control" data-live-search="true" onchange="getIp($(this).val())">'
+        }else{
+            html = "<select style='height: 32px;border: none;margin-top: -9px;' class='' onchange='getIp($(this).val())'>"
+        }
+        html += "<option>--请选择组--</option>"
+        for(i=0;i<data.length;i++){
+            html += "<option value='"+data[i]["groupsName"]+"'>"+data[i]["groupsName"]+"</option>"
+        }
+        html += "</select>"
+        return html;
+    }
+
+    function to_min_image(ip){
+        $.cookie("is_range","");
+        $.cookie("is_realtime", "0");
+        $.cookie("is_all_select", "");
+        if(!ip){
+            window.location='/monitor/graph/all/index?ip=$!{ip}'
+        }else{
+            window.location='/monitor/graph/all/index?ip='+ip
+        }
+    }
 
     function loadiframe() {
         cookieName = "selectImages"
@@ -216,6 +268,9 @@
     loadiframe();
 
     function toPage(ip,type) {
+        $('#show_search_ip').hide()
+        $.cookie("is_realtime","0");
+        $.cookie("is_all_select","");
         if(!type){
             $('#img_type').val("")
         }else{
@@ -228,6 +283,7 @@
         if(add!=ip){
             selectimg(ip)
         }
+        $.cookie("is_range","1");
         getCheckValue("",ip);
     }
     function iFrameHeight() {
@@ -250,16 +306,39 @@
         check = $("."+css+"All").is(":checked");
         $("."+css).prop("checked",check);
     }
-    function getIp(groupsName){
-        url = "/resource/configure/server/listData?length=100000&start=1&draw=1";
-        result = post({groupsName:groupsName.trim()},url);
+
+
+    function getIp(groupsName, ip ){
+        if (ip&&ip.length<4){
+            return
+        }
+        if(ip){
+            url = "/monitor/platform/server/listData?length=30&start=1&draw=1";
+        }else{
+            url = "/resource/configure/server/listData?length=1000&start=1&draw=1";
+        }
+        result = post({groupsName:groupsName.trim(),"search[value]":ip},url);
         data = result["data"];
 
         html = ""
+        width = $("#search_ip").css("width")
         for(i=0;i<data.length;i++){
-            html += "<option value="+data[i]["ipAddress"]+">"+data[i]["ipAddress"]+"</option>"
+            if(groupsName){
+                html += "<option value="+data[i]["ipAddress"]+">"+data[i]["ipAddress"]+"</option>"
+            }else{
+                html += "<button title='"+data[i]["hostname"]+"' onclick=\"to_min_image('"+data[i]["ip"]+"')\" style='width:"+width+";' class='btn-outline btn-primary btn search-ip'>"+data[i]["ip"]+"</button><br>"
+            }
         }
-        $('#selectIp').html(html)
+        if(ip){
+            $('#show_search_ip').css("width",width)
+            $('#show_search_ip').show()
+            $('#show_search_ip').html(html)
+        }else{
+            $('#show_search_ip').hide()
+            $('#select_groups_ip').html(html)
+            $('#selectIp').html(html)
+        }
+        $('#select_groups_ip').selectpicker('refresh');
     }
 
 
@@ -295,13 +374,17 @@
         }else{
             url = urls;
         }
-        // 小图显示
-        if("$!{bind}"){
-            url = urls+"$!{bind}";
-        }
+
         // 获取压缩数据
         if (dayNumber){
-            url = urls+"&dayNumber=" + dayNumber;
+            url = urls+"&dayNumber=" + dayNumber ;
+        }
+
+        is_all_select = $.cookie("is_all_select")
+        if(is_all_select=="1"){
+            ips =   $.cookie("select_all_ip_textarea")
+            ips = ips.replace(/\n/g,",")
+            url = urls +"&isAll=1&ips="+ips;
         }
 
         $('#iframepage').attr("src",url);
@@ -333,13 +416,6 @@
     function timearea(value) {
         var d = new Date();
         var str = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-        //  小于30天直接获取数据
-        if (value < 30) {
-           $('#startSendTime').val(time_count(str, value))
-           $('#endSendTime').val(str)
-           getCheckValue();
-            return
-        }
         getCheckValue("","", value)
     }
 
@@ -361,6 +437,7 @@
         }catch (ex){}
     }
     window.setInterval("reinitIframe()", 4000);
+
 </script>
 
 </body>

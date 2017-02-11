@@ -26,15 +26,15 @@ import java.io.FileReader;
  */
 public class FileWriter {
 
-    private static Logger logger = Logger.getLogger(FileRender.class);
+    private final static Logger logger = Logger.getLogger(FileRender.class);
 
-    private static DateUtil dateUtil = new DateUtil();
+    private final static DateUtil dateUtil = new DateUtil();
 
     // 默认用这个，如果需要更新，改掉就行
-    public static String dataDir = System.getProperty("user.home");
+    public final static String dataDir = System.getProperty("user.home");
 
     // 获取文件分割符号，window \ linux /
-    public static String separator = System.getProperty("file.separator");
+    public final static String separator = System.getProperty("file.separator");
 
 
     /**
@@ -62,6 +62,15 @@ public class FileWriter {
      *         文件内容
      */
     public static void writeFile(String file, String content, boolean append) {
+//        file = file.replace("..", "");
+//        makeDirs(file);
+//        try {
+//            java.io.FileWriter fileWriter = new java.io.FileWriter(file, append);
+//            fileWriter.write(content + "\n");
+//            fileWriter.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         // 防止等待磁盘
         FileThread thread = new FileThread(file, content, append);
         thread.start();
@@ -122,18 +131,6 @@ public class FileWriter {
         // 将值组装成固定的时间和数据
         String content = DateUtil.getDateStampInteter() + "000 " + value.trim();
         writeFile(dir, content, true);
-    }
-
-    /**
-     * 替换掉特殊字符
-     *
-     * @param content
-     *
-     * @return
-     */
-    String replace(String content) {
-        content = content.replace("\\n", " ");
-        return content;
     }
 
 

@@ -118,7 +118,7 @@ public class AllGraphController {
      * @return
      */
     @RequestMapping("sub")
-    public String sub(String ip, String select, String startT, String endT, String type, String width, Model model, String dayNumber) {
+    public String sub(String ip, String select, String startT, String endT, String type, String width, Model model, String dayNumber, String isAll, String ips) {
         ArrayList dir ;
         // 获取默认数据
         if (ip == null || ip.length() < 1) {
@@ -146,7 +146,6 @@ public class AllGraphController {
                         tempArr.add(tname);
                     }
                 }
-
                 if (tempMap.get(types[0]) != null) {
                     ArrayList newTemp = (ArrayList) tempMap.get(types[0]);
                     for (String ns : tempArr) {
@@ -183,8 +182,13 @@ public class AllGraphController {
         model.addAttribute("startT", startT);
         model.addAttribute("endT", endT);
         model.addAttribute("ip", ip);
-        if (type != null && type.equals("bind")) {
-            return "/monitor/graph/all/subbind";
+
+        if (ips != null) {
+            model.addAttribute("ips", ips.split(","));
+        }
+
+        if(isAll != null && isAll.equals("1")) {
+            return "/monitor/graph/all/merger";
         }
         if (type == null) {
             return "/monitor/graph/all/sub";
@@ -210,6 +214,7 @@ public class AllGraphController {
         model.addAttribute("types", map);
         return "/monitor/graph/all/selectImg";
     }
+
 
     /**
      * 数据写入

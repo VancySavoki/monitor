@@ -59,11 +59,15 @@ public class DataMergerUtil extends Thread {
     public void run() {
         init();
         // 月数据
-        int rows = FileRender.getFileRows(fileName);
-        if(rows < maxNumber ) {
-            mergerStart();
-        }else {
-            getGt30DayData();
+        if (dayNumber>30) {
+            int rows = FileRender.getFileRows(fileName);
+            if (rows < maxNumber) {
+                mergerStart();
+            } else {
+                getGt30DayData();
+            }
+        }else{
+            dataMerger();
         }
     }
 
@@ -201,13 +205,6 @@ public class DataMergerUtil extends Thread {
         ArrayList<ArrayList> datas;
         datas = readHistory(ip, groups, name, startT, endT, null);
         merger(datas);
-    }
-
-    // 获取数据读取的时间段
-    ArrayList<String> getDateList() {
-        String startT = getLastNDay(dayNumber);
-        String endT = getYestDay();
-        return FileRender.findDates(startT, endT);
     }
 
     // 获取合并的条数基准数
