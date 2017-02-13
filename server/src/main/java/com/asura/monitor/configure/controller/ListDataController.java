@@ -378,12 +378,16 @@ public class ListDataController {
      */
     @RequestMapping(value = "messages/recordData", produces = {"application/json;charset=UTF-8"})
     @ResponseBody
-    public String recordData(int draw, int start, int length, HttpServletRequest request) {
+    public String recordData(int draw, int start, int length, HttpServletRequest request, String startTime, String endTime) {
         PageBounds pageBounds = PageResponse.getPageBounds(length, start);
         SearchMap searchMap = new SearchMap();
         String search = request.getParameter("search[value]");
         if (search != null && search.length() > 1) {
             searchMap.put("search", search);
+        }
+        if (startTime!=null&&startTime.length()>1){
+            searchMap.put("startT", startTime);
+            searchMap.put("endT", endTime);
         }
         PagingResult<MonitorMessagesEntity> result = messagesService.findAll(searchMap, pageBounds, "selectByAll");
         return PageResponse.getMap(result, draw);

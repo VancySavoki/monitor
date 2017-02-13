@@ -86,6 +86,7 @@ public class MergeController {
         arrayList.add(3);
         arrayList.add(7);
         arrayList.add(15);
+        arrayList.add(30);
         arrayList.add(60);
         arrayList.add(90);
         arrayList.add(120);

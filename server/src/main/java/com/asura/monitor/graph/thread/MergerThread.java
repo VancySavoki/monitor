@@ -46,23 +46,6 @@ public class MergerThread extends Thread {
             ArrayList dir = getSubDir(ip);
             // 获取所有的类型
             Map<String, ArrayList> map = FileRender.getGraphName(dir, ip);
-            ExecutorService executor = Executors.newFixedThreadPool(300);
-            for (Map.Entry<String, ArrayList> entity1 : map.entrySet()) {
-                groups = entity1.getKey();
-                ArrayList names = entity1.getValue();
-                    for (int i = 0; i < names.size(); i++) {
-                        name = (String) names.get(i);
-                        DataMergerUtil dataMergerUtil = new DataMergerUtil(groups, name, 30, ip);
-                        executor.execute(dataMergerUtil);
-                    }
-            }
-            executor.shutdown();
-            try {
-                while (!executor.isTerminated()) {
-                    Thread.sleep(100);
-                }
-            } catch (Exception e) {
-            }
             executor(map, ip, start);
         }
     }
@@ -70,24 +53,24 @@ public class MergerThread extends Thread {
     void executor(Map<String, ArrayList> map, String ip, Long start){
         String groups;
         String name;
-        ExecutorService executors = Executors.newFixedThreadPool(300);
         for (Map.Entry<String, ArrayList> entity1 : map.entrySet()) {
             groups = entity1.getKey();
             ArrayList names = entity1.getValue();
             for (Integer day : arrayList) {
+                ExecutorService executors = Executors.newFixedThreadPool(300);
                 for (int i = 0; i < names.size(); i++) {
                     name = (String) names.get(i);
                     DataMergerUtil dataMergerUtil = new DataMergerUtil(groups, name, day, ip);
                     executors.execute(dataMergerUtil);
                 }
+                executors.shutdown();
+                try {
+                    while (!executors.isTerminated()) {
+                        Thread.sleep(100);
+                    }
+                } catch (Exception e) {
+                }
             }
-        }
-        executors.shutdown();
-        try {
-            while (!executors.isTerminated()) {
-                Thread.sleep(100);
-            }
-        } catch (Exception e) {
         }
         System.out.println(ip + " end  " + (System.currentTimeMillis() / 1000 - start));
     }
