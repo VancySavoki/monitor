@@ -30,6 +30,10 @@
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img3.png)
 <br>
+<b>大图显示</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img12.png)
+<br>
 <b>多维数据显示(任何机器任何数据组合对比)</b></br>
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img11.png)
