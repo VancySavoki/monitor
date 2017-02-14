@@ -16,6 +16,7 @@
 9、自定义数据上报时间,最低5秒上报一次数据<br>
 10、不同server性能对比,更简单,更清晰<br>
 11、支持图像搜索,主机名,ip地址搜索图像<br>
+12、图像收藏功能,常用的直接在收藏列表点开查看<br>
 </br>
 
 遇到任何问题可联系作者QQ:270851812@qq.com<br>
@@ -49,6 +50,10 @@
 <b>图像搜索功能</b></br>
 <br>
 ![image](https://github.com/AsuraTeam/monitor/blob/master/images/img13.png)
+<br>
+<b>图像收藏功能</b></br>
+<br>
+![image](https://github.com/AsuraTeam/monitor/blob/master/images/img14.png)
 <br>
 <b>更多时间段图像(缩小后的)</b></br>
 <br>

@@ -8,6 +8,7 @@ import com.asura.common.response.PageResponse;
 import com.asura.common.response.ResponseVo;
 import com.asura.monitor.configure.conf.MonitorCacheConfig;
 import com.asura.monitor.configure.entity.MonitorIndexFromScriptsEntity;
+import com.asura.monitor.configure.entity.MonitorScriptsEntity;
 import com.asura.monitor.configure.service.MonitorIndexFromScriptsService;
 import com.asura.monitor.configure.service.MonitorScriptsService;
 import com.asura.monitor.graph.util.FileRender;
@@ -67,7 +68,8 @@ public class IndexFromScriptController {
             MonitorIndexFromScriptsEntity result = indexService.findById(id,MonitorIndexFromScriptsEntity.class);
             model.addAttribute("configs",result);
         }
-        model.addAttribute("scripts", scriptsService.findAll(new SearchMap(),new PageBounds(),"selectByAll").getRows());
+        List<MonitorScriptsEntity> result = scriptsService.getDataList(new SearchMap(), "selectByAll");
+        model.addAttribute("scripts", result);
         return "monitor/configure/index/add";
     }
 

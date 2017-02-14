@@ -217,7 +217,13 @@
                       <button type="button" style="margin-left: 5px;" onclick="imageSelect(1);" class="btn btn-outline btn-success">多维度选择</button>
                       <button type="button" style="margin-left: 5px;" onclick="imageSelect('','1');" class="btn btn-outline btn-default">实时查看</button>
                   </span>
-                  <span class="pull-right" style="margin-left:40px;">
+                   <span class="pull-right" id="my_collection_graph" style="margin-left:10px;display:none;">
+                     <button type="button" onclick="to_my_collection()"  class="btn btn-outline btn-success">我的收藏:<span id="my_collection_graph_number"></span></button>
+                  </span>
+                 <span class="pull-right" id="" style="margin-left:10px;">
+                     <button type="button" onclick="save_my_collection()"  class="btn btn-outline btn-primary">收藏图像</button>
+                  </span>
+                  <span class="pull-right" style="margin-left:10px;">
                   <button type="button"  class="btn btn-outline btn-warning">状态:<span id="show_image_status_id"></span></button>
                   </span>
                 <input type="text" class="form-control" style="width:300px;margin-left:10px;" id="search_images" onkeyup="search_images($(this).val())" placeholder="图片搜索">
@@ -233,6 +239,35 @@
 <input type="hidden" id="select_ip_address">
 <input type="hidden" id="img_type">
 <script type="text/javascript" language="javascript">
+    function set_my_collection() {
+        result = post({},"/user")
+        if(result){
+            url = "/monitor/graph/collection/number";
+            result = post({},url);
+            $('#my_collection_graph_number').html(result);
+            $('#my_collection_graph').show()
+        }else{
+            $('#my_collection_graph').hide()
+        }
+    }
+    set_my_collection();
+
+    function save_my_collection(){
+        data = $.cookie("selectImages");
+        if(data.length>5){
+            url = "/monitor/graph/collection/save";
+            result = post({ip:"$!{ip}", images:data},url);
+            parent.layer.msg(JSON.stringify(result),  {icon:1});
+            set_my_collection();
+        }else{
+            parent.layer.msg("请先选择好要收藏的图像",  {icon:2});
+        }
+    }
+
+    function to_my_collection() {
+        url = "/monitor/graph/collection/list";
+        window.location= url;
+    }
 
     function search_images_load(value, id){
         aa = ""
@@ -256,6 +291,7 @@
             value = groups+"|"+name
             select+= value +","
         }
+        $.cookie("selectImages", select,{path:"/"})
         url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+select
         $('#show_image_status_id').html($.cookie("s"))
         $('#iframepage').attr("src", url);
@@ -312,6 +348,7 @@
         if ("$!{select}"){
             chk_value = "$!{select}"
         }
+        $.cookie("selectImages", chk_value,{path:"/"})
         url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+chk_value
         $('#show_image_status_id').html($.cookie("s"))
         $('#iframepage').attr("src", url);
@@ -420,7 +457,7 @@
         })
 
         cookieName = "selectImages"
-        $.cookie(cookieName, chk_value);
+        $.cookie(cookieName, chk_value, {path:"/"});
 
         type = $('#img_type').val()
         urls = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT;
@@ -491,7 +528,7 @@
             iframe.height = height;
         }catch (ex){}
     }
-    window.setInterval("reinitIframe()", 4000);
+    window.setInterval("reinitIframe()", 34000);
 
 </script>
 

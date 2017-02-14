@@ -1169,3 +1169,14 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2017-01-31 11:00:39
+
+CREATE TABLE `monitor_images_collection` (
+  `collection_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `images` varchar(500) DEFAULT NULL COMMENT '收录图片地址',
+  `create_time` varchar(32) DEFAULT NULL COMMENT '收录时间',
+  `user` varchar(32) DEFAULT NULL COMMENT '收录人',
+  `description` varchar(100) DEFAULT NULL COMMENT '描述信息',
+  `last_modify_time` varchar(32) DEFAULT NULL,
+  `ip` varchar(32) comment "ip地址",
+  PRIMARY KEY (`collection_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
