@@ -118,8 +118,6 @@ public class FileRender {
                     arr.add(data);
                 }
                 read.close();
-            } else {
-                LOGGER.warn("找不到指定的文件" + filePath);
             }
         } catch (Exception e) {
             LOGGER.warn("读取文件内容出错" + filePath);
@@ -489,4 +487,3 @@ public class FileRender {
         return result;
     }
 }
-

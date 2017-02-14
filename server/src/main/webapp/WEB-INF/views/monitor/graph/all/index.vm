@@ -19,6 +19,7 @@
             $('.selectpicker').selectpicker({
                 'selectedText': 'cat'
             });
+            $.cookie("s","多维度查看");
             $('#show_graph_select_ip').modal("toggle")
             return
         }else{
@@ -28,6 +29,7 @@
         $.cookie("is_realtime","0");
         if(realtime){
 
+            $.cookie("s","实时查看");
             $.cookie("is_realtime", 1);
             return
         }
@@ -206,16 +208,21 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="search_ip" onkeyup="getIp('',$(this).val())" placeholder="输入IP地址">
                 <div class="col-md-2" id="show_search_ip" style="display:none;position:absolute;background-color:#fefefe;margin-top:30px;">
-
                 </div>
                 <span class="input-group-btn"> <button type="button" onclick="to_min_image($('#search_ip').val())" class="btn  btn-primary">看图
                 </button> </span>
                   <span class="input-group-btn" >
-                      <button type="button" style="margin-left: 10px;" onclick="toPage($('#search_ip').val(),1)" class="btn btn-outline btn-warning">区间图</button>
-                      <button type="button" style="margin-left: 10px;" onclick="to_min_image()" class="btn btn-outline btn-danger">小图</button>
-                      <button type="button" style="margin-left: 10px;" onclick="imageSelect(1);" class="btn btn-outline btn-success">多维度选择</button>
-                      <button type="button" style="margin-left: 10px;" onclick="imageSelect('','1');" class="btn btn-outline btn-default">实时查看</button>
+                      <button type="button" style="margin-left: 5px;" onclick="toPage($('#search_ip').val(),1)" class="btn btn-outline btn-warning">区间图</button>
+                      <button type="button" style="margin-left: 5px;" onclick="to_min_image()" class="btn btn-outline btn-danger">小图</button>
+                      <button type="button" style="margin-left: 5px;" onclick="imageSelect(1);" class="btn btn-outline btn-success">多维度选择</button>
+                      <button type="button" style="margin-left: 5px;" onclick="imageSelect('','1');" class="btn btn-outline btn-default">实时查看</button>
                   </span>
+                  <span class="pull-right" style="margin-left:40px;">
+                  <button type="button"  class="btn btn-outline btn-warning">状态:<span id="show_image_status_id"></span></button>
+                  </span>
+                <input type="text" class="form-control" style="width:300px;margin-left:10px;" id="search_images" onkeyup="search_images($(this).val())" placeholder="图片搜索">
+                <div class="col-md-2" id="show_search_images" style="display:none;position:absolute;background-color:#fefefe;margin-top:30px;margin-left:10px;">
+                </div>
             </div></div>
         <iframe src="" name="imgiframe" id="iframepage" frameborder="0" width="100%" scrolling="no" marginheight="0" marginwidth="0" onLoad="iFrameHeight()"></iframe>
 
@@ -226,6 +233,48 @@
 <input type="hidden" id="select_ip_address">
 <input type="hidden" id="img_type">
 <script type="text/javascript" language="javascript">
+
+    function search_images_load(value, id){
+        aa = ""
+        $("input[name='select_image_name']:checkbox:checked").each(function(){
+            aa+=$(this).val()+","
+        })
+        datas = aa.split(",")
+        select = ""
+        for(j=0;j<datas.length;j++){
+            value = datas[j]
+            if(!value){continue}
+            if(value.length<3){continue}
+            value = value.replace(/\//g,"SLASH")
+            values = value.split(".")
+            groups = values[0]
+            name = ""
+            for(i=1;i<values.length;i++){
+                name += values[i]+"."
+            }
+            name = name.substring(0, name.length-1);
+            value = groups+"|"+name
+            select+= value +","
+        }
+        url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+select
+        $('#show_image_status_id').html($.cookie("s"))
+        $('#iframepage').attr("src", url);
+    }
+
+
+    function search_images(value){
+        $("#show_search_images").show()
+        url = "/monitor/configure/index/listData?start=1&length=100&draw=1";
+        result = post({"search[value]": value},url);
+        data = result["data"]
+        width = $("#search_images").css("width").replace(/px/,"")
+        $("#show_search_images").css("width", width)
+        html = "<div style='float:left;text-align:left;'><span  onclick='$(\"#show_search_images\").hide()' style='text-align:left;width:"+width+"px;' class='btn-outline btn-danger btn search-ip'><div class='checkbox  checkbox-inline'><label for='inlineCheckbox'>关闭</label></div></div><br>"
+        for (i=0;i<data.length;i++){
+            html += "<div style='float:left;text-align:left;'><span style='text-align:left;width:"+width+"px;' class='btn-outline btn-primary btn search-ip'><div class='checkbox  checkbox-inline'><input type='checkbox' name='select_image_name'  onclick=\"search_images_load('"+data[i]["indexName"]+"',"+i+")\" value='"+data[i]["indexName"].replace(/SLASH/g,"/")+"' id='inlineCheckbox"+i+"'><label for='inlineCheckbox"+i+"'> "+data[i]["indexName"].replace(/SLASH/g,"/")+"</label></div></div><br>"
+        }
+        $("#show_search_images").html(html)
+    }
 
     function getGroups(isSelect) {
         url = "/resource/configure/groups/listData?draw=1&length=1000&start=1";
@@ -246,8 +295,10 @@
 
     function to_min_image(ip){
         $.cookie("is_range","");
+        $.cookie("s","小图查看");
         $.cookie("is_realtime", "0");
         $.cookie("is_all_select", "");
+        $('#show_image_status_id').html($.cookie("s"))
         if(!ip){
             window.location='/monitor/graph/all/index?ip=$!{ip}'
         }else{
@@ -262,12 +313,14 @@
             chk_value = "$!{select}"
         }
         url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+chk_value
+        $('#show_image_status_id').html($.cookie("s"))
         $('#iframepage').attr("src", url);
     }
 
     loadiframe();
 
     function toPage(ip,type) {
+        $.cookie("s","区间图");
         $('#show_search_ip').hide()
         $.cookie("is_realtime","0");
         $.cookie("is_all_select","");
@@ -284,9 +337,11 @@
             selectimg(ip)
         }
         $.cookie("is_range","1");
+        $('#show_image_status_id').html($.cookie("s"))
         getCheckValue("",ip);
     }
     function iFrameHeight() {
+        $('#show_image_status_id').html($.cookie("s"))
         var ifm= document.getElementById("iframepage");
         var subWeb = document.frames ? document.frames["iframepage"].document : ifm.contentDocument;
         if(ifm != null && subWeb != null) {

@@ -1,7 +1,7 @@
 package com.asura.monitor.graph.thread;
 
-import com.asura.monitor.graph.util.DataMergerUtil;
 import com.asura.monitor.graph.util.FileRender;
+import com.asura.monitor.graph.util.MergerDataUtil;
 import com.asura.resource.entity.CmdbResourceServerEntity;
 
 import java.util.ArrayList;
@@ -38,8 +38,6 @@ public class MergerThread extends Thread {
 
     public void run() {
         String ip;
-        String groups;
-        String name;
         for (CmdbResourceServerEntity entity : this.ips) {
             ip = entity.getIpAddress();
             long start = System.currentTimeMillis() / 1000;
@@ -60,7 +58,7 @@ public class MergerThread extends Thread {
                 ExecutorService executors = Executors.newFixedThreadPool(300);
                 for (int i = 0; i < names.size(); i++) {
                     name = (String) names.get(i);
-                    DataMergerUtil dataMergerUtil = new DataMergerUtil(groups, name, day, ip);
+                    MergerDataUtil dataMergerUtil = new MergerDataUtil(groups, name, day, ip);
                     executors.execute(dataMergerUtil);
                 }
                 executors.shutdown();

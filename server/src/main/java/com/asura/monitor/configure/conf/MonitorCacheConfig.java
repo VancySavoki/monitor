@@ -139,4 +139,8 @@ public class MonitorCacheConfig {
 
     // 存放主机是否存活 cache_host_is_update_id Long 类型
     public static String cacheHostIsUpdate = "cache_host_is_update_";
+
+    // 画图使用存放机器的队列
+    public static String mergerDataQueue = "cache_merger_data_queue";
+
 }

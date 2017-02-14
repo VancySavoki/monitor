@@ -1,15 +1,17 @@
 package com.asura.monitor.graph.controller;
 
 import com.asura.framework.base.paging.SearchMap;
-import com.asura.monitor.graph.thread.MergerThread;
+import com.asura.monitor.configure.conf.MonitorCacheConfig;
 import com.asura.monitor.graph.util.FileWriter;
 import com.asura.resource.entity.CmdbResourceServerEntity;
 import com.asura.resource.service.CmdbResourceServerService;
+import com.asura.util.RedisUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import redis.clients.jedis.Jedis;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ public class MergeController {
     boolean checkLock(){
         File file = new File(MERGER_LOCK_FILE);
         if (file.exists()) {
-            if (System.currentTimeMillis() / 1000 - file.lastModified() / 100 > 60*60*20) {
+            if (System.currentTimeMillis() / 1000 - file.lastModified() / 1000 > 60*60*20) {
                 return true;
             } else {
                 return false;
@@ -93,9 +95,13 @@ public class MergeController {
         arrayList.add(180);
         arrayList.add(240);
         arrayList.add(360);
+        RedisUtil redisUtil = new RedisUtil();
+        Jedis jedis = redisUtil.getJedis();
         List<CmdbResourceServerEntity> ips = serverService.getDataList(searchMap, "selectAllIp");
-        MergerThread mergerThread = new MergerThread(ips, arrayList);
-        mergerThread.start();
+        for (CmdbResourceServerEntity entity:ips){
+            LOGGER.info("添加merger到队列"+entity.getIpAddress());
+            jedis.lpush(RedisUtil.app + "_"+ MonitorCacheConfig.mergerDataQueue, entity.getIpAddress());
+        }
         return "ok";
     }
 }
