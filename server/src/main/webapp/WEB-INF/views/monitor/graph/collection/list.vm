@@ -24,6 +24,8 @@
     <div id="page-wrapp1er" class="gray-bg">
         #include("/index/header.vm")
         <div id="addConfig"></div>
+        <br>
+        <br>
         <div class="col-sm-12" style="margin-top:10px">
             <table id="listTable"
                    class="table  table-bordered table-hover dataTables-example">

@@ -1,6 +1,5 @@
 package com.asura.monitor.graph.util;
 
-import com.google.gson.Gson;
 import com.asura.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +37,6 @@ public class FileRender {
 
 
     private static Logger LOGGER = LoggerFactory.getLogger(FileRender.class);
-
-    private static Gson gson = new Gson();
 
     // 默认用这个，如果需要更新，改掉就行
     private static String dataDir = FileWriter.dataDir;

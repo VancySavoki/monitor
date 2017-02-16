@@ -528,7 +528,7 @@
             iframe.height = height;
         }catch (ex){}
     }
-    window.setInterval("reinitIframe()", 34000);
+    window.setInterval("reinitIframe()", 3400);
 
 </script>
 

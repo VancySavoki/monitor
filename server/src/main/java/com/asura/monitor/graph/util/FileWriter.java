@@ -276,7 +276,9 @@ public class FileWriter {
             int line = 0;
             while ((temp = br.readLine()) != null) {
                 line++;
-                if (line == lineDel) continue;
+                if (line <= lineDel) {
+                    continue;
+                }
                 sb.append(temp).append("\n");
             }
             br.close();

@@ -16,6 +16,7 @@ import com.asura.util.DateUtil;
 import com.asura.util.PermissionsCheck;
 import com.asura.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.asura.monitor.graph.util.FileWriter.dataDir;
 import static com.asura.monitor.graph.util.FileWriter.separator;
@@ -80,29 +83,42 @@ public class IndexFromScriptController {
     @RequestMapping("index/getIndex")
     @ResponseBody
     public String getIndex(){
+        RedisUtil redisUtil = new RedisUtil();
+        String lock = redisUtil.get(MonitorCacheConfig.updateIndexNameLock);
+        if (lock!=null && lock.equals("1")){
+            return "get Index is lock";
+        }else{
+            redisUtil.setex(MonitorCacheConfig.updateIndexNameLock, 600, "1");
+        }
+        Map indexMap = new HashMap();
         SearchMap searchMap = new SearchMap();
-        PageBounds pageBounds = PageResponse.getPageBounds(1000000,1);
+        PageBounds pageBounds = PageResponse.getPageBounds(1000000, 1);
         List indexList = new ArrayList<>();
         PagingResult<MonitorIndexFromScriptsEntity> result = indexService.findAll(searchMap, pageBounds, "selectByAll");
         for (MonitorIndexFromScriptsEntity entity: result.getRows()){
             indexList.add(entity.getIndexName());
+            indexMap.put(entity.getIndexName(), entity.getScriptsId());
         }
         String dir = dataDir + separator + "graph" + separator +"index" +separator;
         File file = new File(dir);
         File[] list = file.listFiles();
         for (File files:list){
            String index =  files.getName();
-            if (!indexList.contains(index)){
-                try {
-                    MonitorIndexFromScriptsEntity scriptsEntity = new MonitorIndexFromScriptsEntity();
-                    scriptsEntity.setIndexName(index);
-                    scriptsEntity.setLastModifyTime(DateUtil.getTimeStamp());
-                    String scriptId = FileRender.readLastLine(dir + index+ separator + "id");
-                    scriptsEntity.setScriptsId(Integer.valueOf(scriptId.replace("\n","")));
+            MonitorIndexFromScriptsEntity scriptsEntity = new MonitorIndexFromScriptsEntity();
+            scriptsEntity.setIndexName(index);
+            scriptsEntity.setLastModifyTime(DateUtil.getTimeStamp());
+            String scriptId = FileRender.readLastLine(dir + index+ separator + "id");
+            scriptsEntity.setScriptsId(Integer.valueOf(scriptId.replace("\n","")));
+            try {
+                if (!indexList.contains(index)) {
                     indexService.save(scriptsEntity);
-                }catch (Exception e){
-                      e.printStackTrace();
+                } else {
+                    if (indexMap.get(index).equals(scriptId.trim())) {
+                        indexService.update(scriptsEntity);
+                    }
                 }
+            }catch (Exception e){
+                e.printStackTrace();
             }
         }
         return "ok";

@@ -83,6 +83,10 @@
                             onclick="window.location='/monitor/configure/configure/setCache'">
                         <i class="fa fa-heart-o"></i>&nbsp;&nbsp;<span class="bold">生成缓存</span>
                     </button>
+                    <button class="btn btn-outline btn-primary " type="button"
+                            onclick="window.location='/monitor/configure/contacts/list'">
+                        <i class="fa fa-user"></i>&nbsp;&nbsp;<span class="bold">联系人配置</span>
+                    </button>
                     <div class="col-md-2 multiple pull-right">
                         <select class="btn selectpicker bla bla bli form-control"  data-live-search="true" onchange="loadData($(this).val())" >
                             <option value="">请选择业务线</option>

@@ -902,7 +902,6 @@
             arg7 = "$!{configs.arg7}"
             arg8 = "$!{configs.arg8}"
             data = [arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8]
-            console.log(data)
             html = "<div class='col-md-12'></div>"
             for (i = 0; i <= 7; i++) {
                 if (!data[i]) {

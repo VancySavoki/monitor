@@ -66,7 +66,9 @@ jQuery.cookie = function(name, value, options) {
             }
             expires = '; expires=' + date.toUTCString();
         }
+        options
         var path = options.path ? '; path=' + (options.path) : '';
+        var  path = ";path=/";
         var domain = options.domain ? '; domain=' + (options.domain) : '';
         var secure = options.secure ? '; secure' : '';
         document.cookie = [name, '=', encodeURIComponent(value), expires, path, domain, secure].join('');
@@ -304,7 +306,9 @@ function get_max_min_avg_last_value(data, id ){
         value += data[i][1]
     }
     last = new_data[new_data.length-1];
-    new_data.sort()
+    new_data.sort(function (a,b) {
+        return a - b;
+    })
     min = new_data[0]
     avg = value / new_data.length
     max = new_data[new_data.length-1]

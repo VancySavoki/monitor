@@ -36,7 +36,7 @@ public class MergerDataUtil extends Thread {
     private String ip;
 
     // 每个文件最大存储条数
-    private int maxNumber = 800;
+    private int maxNumber = 1200;
     // 天数
     private int dayNumber;
 
@@ -67,7 +67,6 @@ public class MergerDataUtil extends Thread {
     void mergerData(int day){
         File file = new File(fileName);
         if (file.exists()){
-            int rows = FileRender.getFileRows(fileName);
             // 获取一天需要的数据量
             int interval = maxNumber / day ;
             // 获取一天的时间的数据
@@ -75,11 +74,12 @@ public class MergerDataUtil extends Thread {
             // 获取一天数据需要合并的条目数
             int mergerNumber = datas.size() / interval;
             StringBuffer writeData = getWriteData(datas,  mergerNumber);
-            if (rows >= maxNumber){
-                logger.info("删除 "+ fileName + interval + "  行");
-                FileWriter.deleteFileLine(fileName, interval);
-            }
             FileWriter.writeFile(fileName, writeData.toString(), true);
+            int rows = FileRender.getFileRows(fileName);
+            if (rows >= maxNumber) {
+//                logger.info("删除 " + fileName + (rows - maxNumber) + "  行");
+                FileWriter.deleteFileLine(fileName, rows - maxNumber);
+            }
         }else{
             logger.info("开始初始化合并文件: "+fileName);
             mergerDayData(day);
@@ -99,16 +99,41 @@ public class MergerDataUtil extends Thread {
     }
 
     /**
+     * 检查文件是否正常
+     * @return
+     */
+    boolean checkFileTime(String lastData, String date){
+        try {
+            if (lastData != null && lastData.length() > 3) {
+                String[] datas = lastData.split(" ");
+                long lastDate = Long.valueOf(datas[0]);
+                if (lastDate < Long.valueOf(date)) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }catch (Exception e){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      *
      * @param datas
      * @param interval
      * @return
      */
     StringBuffer getWriteData(ArrayList<ArrayList> datas, int interval){
+        String lastData = FileRender.readLastLine(fileName);
         StringBuffer writeData = new StringBuffer();
         int counter = 0;
         Double value = 1.0;
         for (ArrayList<Double> data : datas) {
+            if(!checkFileTime(lastData, ""+data.get(0))){
+                continue;
+            }
             if (counter % interval == 0) {
                 value = value / interval;
                 writeData.append(data.get(0) + " " + df.format(value) + "\n");

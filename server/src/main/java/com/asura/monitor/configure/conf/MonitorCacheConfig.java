@@ -141,6 +141,12 @@ public class MonitorCacheConfig {
     public static String cacheHostIsUpdate = "cache_host_is_update_";
 
     // 画图使用存放机器的队列
-    public static String mergerDataQueue = "cache_merger_data_queue";
+    public static String mergerDataQueue = "cache_merger_data_queue_";
+
+    // 图片合并任务计划锁
+    public static String mergerDataLock = "cache_merger_data_lock";
+
+    // index名称刷新锁
+    public static String updateIndexNameLock = "cache_update_index_name_lock";
 
 }
