@@ -1,6 +1,7 @@
 package com.asura.monitor.configure.thread;
 
 import com.asura.monitor.configure.controller.CacheController;
+import com.asura.monitor.configure.controller.SaveController;
 
 /**
  * <p></p>
@@ -19,13 +20,19 @@ import com.asura.monitor.configure.controller.CacheController;
 public class MakeCacheThread extends Thread {
 
     private CacheController cacheController;
+    private String[] hosts;
 
-    public MakeCacheThread(CacheController cacheController) {
+    public MakeCacheThread(CacheController cacheController, String[] hosts) {
         this.cacheController = cacheController;
+        this.hosts = hosts;
     }
 
     @Override
     public void run() {
         cacheController.allCache();
+        SaveController saveController = new SaveController();
+        for (String hostId : hosts){
+            saveController.initMonitor(hostId);
+        }
     }
 }

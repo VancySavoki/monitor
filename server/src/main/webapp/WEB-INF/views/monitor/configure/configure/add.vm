@@ -664,6 +664,11 @@
         if (!groupsName) {
             return;
         }
+        if (hosts){
+            if(hosts.indexOf(",") == -1 ){
+                hosts += ","
+            }
+        }
         url = "/resource/configure/server/listData?length=100000&start=1&draw=1";
         result = post({groupsName: groupsName.trim(), key, key, hosts: hosts}, url);
         data = result["data"];

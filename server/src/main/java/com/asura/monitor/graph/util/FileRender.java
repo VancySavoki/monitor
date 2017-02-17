@@ -118,7 +118,6 @@ public class FileRender {
             }
         } catch (Exception e) {
             LOGGER.warn("读取文件内容出错" + filePath);
-            e.printStackTrace();
         }
         return arr;
     }

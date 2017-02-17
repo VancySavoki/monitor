@@ -3,7 +3,7 @@ package com.asura.monitor.configure.controller;
 import com.asura.framework.base.paging.PagingResult;
 import com.asura.framework.base.paging.SearchMap;
 import com.asura.framework.dao.mybatis.paginator.domain.PageBounds;
-import com.google.gson.Gson;
+import com.asura.common.controller.IndexController;
 import com.asura.common.response.PageResponse;
 import com.asura.common.response.ResponseVo;
 import com.asura.monitor.configure.conf.MonitorCacheConfig;
@@ -16,7 +16,6 @@ import com.asura.util.DateUtil;
 import com.asura.util.PermissionsCheck;
 import com.asura.util.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,10 +52,12 @@ public class IndexFromScriptController {
 
     @Autowired
     private PermissionsCheck permissionsCheck;
-    private Gson gson = new Gson();
 
      @Autowired
      private MonitorIndexFromScriptsService indexService;
+
+    @Autowired
+    private IndexController indexController;
 
     @Autowired
     private MonitorScriptsService scriptsService;
@@ -82,7 +83,10 @@ public class IndexFromScriptController {
      */
     @RequestMapping("index/getIndex")
     @ResponseBody
-    public String getIndex(){
+    public String getIndex( MonitorIndexFromScriptsService indexServices){
+        if (indexService == null){
+            indexService = indexServices;
+        }
         RedisUtil redisUtil = new RedisUtil();
         String lock = redisUtil.get(MonitorCacheConfig.updateIndexNameLock);
         if (lock!=null && lock.equals("1")){
@@ -108,6 +112,9 @@ public class IndexFromScriptController {
             scriptsEntity.setIndexName(index);
             scriptsEntity.setLastModifyTime(DateUtil.getTimeStamp());
             String scriptId = FileRender.readLastLine(dir + index+ separator + "id");
+            if (scriptId==null){
+                continue;
+            }
             scriptsEntity.setScriptsId(Integer.valueOf(scriptId.replace("\n","")));
             try {
                 if (!indexList.contains(index)) {
@@ -185,4 +192,22 @@ public class IndexFromScriptController {
         return ResponseVo.responseOk(null);
     }
 
+    /**
+     * 删除指标名称
+     * @param id
+     * @return
+     */
+    @RequestMapping("deleteSave")
+    @ResponseBody
+    public String deleteSave(int id, HttpServletRequest request){
+        MonitorIndexFromScriptsEntity entity = indexService.findById(id,MonitorIndexFromScriptsEntity.class);
+        String dir = dataDir + separator + "graph" + separator +"index" +separator +  FileRender.replace(entity.getIndexName());
+        try {
+            File file = new File(dir);
+            file.delete();
+        }catch (Exception e){
+        }
+        indexController.logSave(request, "删除指标名称 " + entity.getIndexName());
+        return "ok";
+    }
 }

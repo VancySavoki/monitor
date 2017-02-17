@@ -221,7 +221,6 @@ public class SaveController {
             entity.setStatus(1);
             contactGroupService.save(entity);
         }
-//        redisUtil.set(MonitorCacheConfig.cacheContactGroupKey + entity.getGroupName(), gson.toJson(entity));
         cacheController.setContactGroupCache();
         return ResponseVo.responseOk(null);
     }
@@ -251,7 +250,6 @@ public class SaveController {
             entity.setScriptsId(id);
             scriptsService.save(entity);
         }
-//        redisUtil.set(MonitorCacheConfig.cacheScriptKey + entity.getScriptsId(), gson.toJson(entity));
         redisUtil.setex(MonitorCacheConfig.cacheScriptIdKey+ entity.getScriptsId(),600, gson.toJson(entity));
         updateHostUpdate("script");
         cacheController.setDefaultMonitorChange();
@@ -274,10 +272,8 @@ public class SaveController {
         jedis.close();
     }
 
-
     /**
      * 项目配置
-     *
      * @return
      */
     @RequestMapping("item/save")
@@ -299,9 +295,25 @@ public class SaveController {
             entity.setItemId(id);
             itemService.save(entity);
         }
-//        redisUtil.set(MonitorCacheConfig.cacheItemKey + entity.getItemId(), gson.toJson(entity));
         cacheController.setItemCache();
         cacheController.setDefaultMonitorChange();
+        return ResponseVo.responseOk(null);
+    }
+
+    /**
+     * 项目配置
+     * @return
+     */
+    @RequestMapping("item/deleteSave")
+    @ResponseBody
+    public ResponseVo itemDelete(int id, HttpServletRequest request) {
+        String user = permissionsCheck.getLoginUser(request.getSession());
+        MonitorItemEntity entity = itemService.findById(id, MonitorItemEntity.class);
+        String lastUser = entity.getLastModifyUser();
+        if (lastUser.equals(user) || user.equals("admin") ) {
+            indexController.logSave(request, "删除监控项目" + gson.toJson(entity));
+            itemService.delete(entity);
+        }
         return ResponseVo.responseOk(null);
     }
 
@@ -335,7 +347,11 @@ public class SaveController {
         String user = permissionsCheck.getLoginUser(request.getSession());
         entity.setLastModifyUser(user);
         entity.setLastModifyTime(DateUtil.getTimeStamp());
+        String[] hosts ;
         if (entity.getConfigureId() != null) {
+            MonitorConfigureEntity configureEntity = configureService.findById(entity.getConfigureId(), MonitorConfigureEntity.class);
+            hosts = configureEntity.getHosts().split(",");
+
             configureService.update(entity);
         } else {
             List<MonitorConfigureEntity> r = configureService.getDataList(null, "selectMaxId");
@@ -345,14 +361,16 @@ public class SaveController {
             }catch (Exception e){
                 id = 1;
             }
+            hosts = entity.getHosts().split(",");
             entity.setConfigureId(id);
             configureService.save(entity);
         }
         redisUtil.set(MonitorCacheConfig.cacheConfigureKey+entity.getConfigureId(),gson.toJson(entity));
         makeHostMonitorTag(entity);
         setUpdateMonitor(entity);
-        MakeCacheThread cacheThread  = new MakeCacheThread(cacheController);
+        MakeCacheThread cacheThread  = new MakeCacheThread(cacheController, hosts);
         cacheThread.start();
+
         indexController.logSave(request, "添加监控" + gson.toJson(entity));
         return ResponseVo.responseOk(null);
     }
@@ -509,6 +527,22 @@ public class SaveController {
     }
 
     /**
+     * 初始化监控信息
+     * @param hostId
+     */
+    public void initMonitor(String hostId){
+        String server = "";
+        String url = "";
+        String portData = redisUtil.get(MonitorCacheConfig.cacheAgentServerInfo + hostId);
+        if (portData.length() > 5) {
+            Map serverMap = gson.fromJson(portData, HashMap.class);
+            server = redisUtil.get(MonitorCacheConfig.cacheHostIdToIp+hostId);
+            url = "http://" + server + ":" + serverMap.get("port") + "/monitor/init";
+            HttpUtil.sendGet(url);
+        }
+    }
+
+    /**
      * 删除监控
      * @return
      */
@@ -536,14 +570,7 @@ public class SaveController {
             String  delConfigKey = cacheHostCnfigureKey + hostId + "_"
                     + id;
             redisUtil.del(delConfigKey);
-
-            String portData = redisUtil.get(MonitorCacheConfig.cacheAgentServerInfo + hostId);
-            if (portData.length() > 5) {
-                Map serverMap = gson.fromJson(portData, HashMap.class);
-                server = redisUtil.get(MonitorCacheConfig.cacheHostIdToIp+hostId);
-                url = "http://" + server + ":" + serverMap.get("port") + "/monitor/init";
-                HttpUtil.sendGet(url);
-            }
+            initMonitor(hostId);
             String key = MonitorCacheConfig.cacheDefaultChangeQueue + hostId;
             redisUtil.del(key);
             redisUtil.lpush(key, "1");

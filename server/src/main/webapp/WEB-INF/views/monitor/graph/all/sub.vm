@@ -18,7 +18,7 @@
                     <div class="title-img">
                            <span class="default pull-right" title="全年历史" onclick="reload_day_img('$n', '$name','$ip')"><i
                                    class="fa fa-history" style="font-size:19px;margin-top:10px;margin-right: 10px;"></i></span>
-                        <span class="default pull-right" title="加载大图显示" onclick="load${name}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(1);"><i
+                        <span class="default pull-right" title="加载大图显示" onclick="load${name.replace("-", "")}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(1);"><i
                                 class="fa fa-search-plus" style="font-size:19px;margin-top:10px;margin-right: 10px;"></i></span>
                         <h5 align="center" style="margin-top: 10px;margin-left: 10px;">${name}&nbsp;${n.replace("SLASH","/").replace('---','&nbsp;')}</h5>
                     </div>
@@ -60,7 +60,7 @@ realtime = $.cookie("is_realtime");
 is_range = $.cookie("is_range");
     #foreach($name in $names)
         #foreach($n in $types.get($name))
-        function load${name}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(zoom) {
+        function load${name.replace("-", "")}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}(zoom) {
             if (zoom) {
                 setWidthMin('${name}${n.replace('---','').replace(".","_").replace(" ","")}',1)
             }
@@ -82,7 +82,7 @@ function loadimg() {
     #foreach($name in $names)
         #foreach($n in $types.get($name))
             setTimeout(function () {
-                load${name}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}()
+                load${name.replace("-", "")}${n.replace('---','').replace(".","_").replace(" ","").replace("-","")}()
             },Math.round(Math.random()*10)*500)
         #end
     #end

@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.asura.monitor.graph.util.FileRender.readHistory;
 import static com.asura.monitor.graph.util.FileWriter.dataDir;
@@ -126,7 +127,13 @@ public class MergerDataUtil extends Thread {
      * @return
      */
     StringBuffer getWriteData(ArrayList<ArrayList> datas, int interval){
-        String lastData = FileRender.readLastLine(fileName);
+        String lastData = System.currentTimeMillis()-100000 + " " + 0;
+        List<String> lastDatas = FileRender.readLastNLine(fileName, 3);
+        for(String r: lastDatas){
+            if (r!=null&&r.length()>5){
+                lastData = r;
+            }
+        }
         StringBuffer writeData = new StringBuffer();
         int counter = 0;
         Double value = 1.0;
