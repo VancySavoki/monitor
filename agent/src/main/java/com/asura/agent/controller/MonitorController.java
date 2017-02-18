@@ -15,10 +15,12 @@ import com.asura.agent.entity.MonitorSystemScriptsEntity;
 import com.asura.agent.entity.MonitorTemplateEntity;
 import com.asura.agent.entity.PushEntity;
 import com.asura.agent.util.Base64Util;
+import com.asura.agent.util.CommandUtil;
 import com.asura.agent.util.DateUtil;
 import com.asura.agent.util.FileIoUtil;
 import com.asura.agent.util.HttpUtil;
 import com.asura.agent.util.IpUtil;
+import com.asura.agent.util.MonitorUtil;
 import com.asura.agent.util.RedisUtil;
 import com.asura.agent.util.network.Ping;
 import org.slf4j.Logger;
@@ -30,10 +32,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import redis.clients.jedis.Jedis;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +45,9 @@ import java.util.concurrent.LinkedTransferQueue;
 import static com.asura.agent.conf.MonitorCacheConfig.cacheContactGroupKey;
 import static com.asura.agent.conf.MonitorCacheConfig.cacheContactKey;
 import static com.asura.agent.util.HttpUtil.sendPost;
+import static com.asura.agent.util.MonitorUtil.getAdminGroup;
+import static com.asura.agent.util.MonitorUtil.getGroupData;
+import static com.asura.agent.util.MonitorUtil.getScripts;
 import static com.asura.agent.util.RedisUtil.app;
 
 /**
@@ -77,6 +78,8 @@ import static com.asura.agent.util.RedisUtil.app;
  *
  *          20170204 修改agent无监控不能自动恢复问题
  *          20170211 修改配置监控的时间和默认脚本时间冲突
+ *          20170215 修改监控配置丢失报错
+ *          20170218 添加对执行脚本时间的限制，防止卡死程序耗尽资源
  */
 @RestController
 @EnableAutoConfiguration
@@ -85,8 +88,8 @@ public class MonitorController {
 
     private final Logger logger = LoggerFactory.getLogger(MonitorController.class);
 
-    private static RedisUtil redisUtil = new RedisUtil();
-    private static Gson gson = new Gson();
+    private static RedisUtil redisUtil ;
+    private static Gson gson ;
 
     // 获取临时文件目录
     private static String tempDir = System.getProperty("java.io.tmpdir") + separator + "monitor" + separator;
@@ -136,8 +139,6 @@ public class MonitorController {
     private static String successApiUrl;
     // 存放失败的接口
     private static String faildApiUrl;
-    private static Runtime runtime = Runtime.getRuntime();
-
     // 报警，如果redis队列失败，直接调接口发送
     // 报警判断，存放每个脚本存放的报警次数，达到几次后发送报警消息到队列
     // 每次发送报警的数据记录到库里
@@ -196,6 +197,8 @@ public class MonitorController {
      */
     void init() {
         logger.info("初始化系统变量.....");
+        redisUtil = new RedisUtil();
+        gson = new Gson();
         hostConfigs = new HashSet<>();
         groupsConfigs = new HashSet<>();
         HOST_IDS = "";
@@ -269,12 +272,10 @@ public class MonitorController {
      * 缓存服务启动端口和主机名
      */
     void setAgentServerInfo() {
-
         Map map = new HashMap();
         map.put("port", IpUtil.getServerPort());
         map.put("hostname", IpUtil.getHostname());
         redisUtil.set(MonitorCacheConfig.cacheAgentServerInfo + HOST_IDS, gson.toJson(map));
-
     }
 
     /**
@@ -688,21 +689,17 @@ public class MonitorController {
                     MonitorItemEntity itemEntity = (MonitorItemEntity) SCRIPT_RETRY_MAP.get(id);
                     alarmInterval = itemEntity.getAlarmInterval() * 60;
                 }
-
-//                info("ALARM_COUNT ... " + gson.toJson(ALARM_COUNT));
                 if (ALARM_COUNT == null || ALARM_COUNT.size() < 1) {
                     info("没有ALARM_COUNT, 退出ALARM_COUNT");
                     return;
                 }
 
                 info("获取到报警间隔为:" + alarmInterval);
-
                 if (ALARM_COUNT.get(alarmId) == null) {
                     info("ALARM_COUNT is null ... " + alarmId);
                     continue;
                 }
                 info("获取到ALARM_COUNT 是" + ALARM_COUNT.get(alarmId) + "");
-
                 if (currTime - lastSendTime < alarmInterval && currTime > lastSendTime) {
                     // 第一次不记数，直接发送
                     if (alarmInterval > 0 && retry > 0) {
@@ -775,7 +772,6 @@ public class MonitorController {
             return;
         }
         PushEntity entity = queue.poll();
-//        info("queue 获取到.." + gson.toJson(entity));
         if (entity != null) {
             int scriptId = Integer.valueOf(entity.getScriptId());
             int status = Integer.valueOf(entity.getStatus());
@@ -830,9 +826,7 @@ public class MonitorController {
         Random random = new Random();
         // 防止重复执行
         Thread.sleep(random.nextInt(100) * 300);
-        info("resetMonitorTime .. end");
         Thread.sleep(random.nextInt(100) * 300);
-
         Jedis jedis = redisUtil.getJedis();
         String queueKey = app + "_" + MonitorCacheConfig.cacheHostUpdateQueue + getHosts();
         info(queueKey);
@@ -847,6 +841,7 @@ public class MonitorController {
             }
         }
         jedis.close();
+        info("resetMonitorTime .. end");
     }
 
     /**
@@ -866,47 +861,11 @@ public class MonitorController {
     }
 
     /**
-     * @param groupsId
-     *
-     * @return
-     */
-    HashSet<String> getGroupsHosts(String groupsId) {
-        String fileName = tempDir + separator + "cache_groups_hosts_" + groupsId;
-        if (checkCacheFileTime("cache_groups_hosts_" + groupsId, 1800)) {
-            String result = redisUtil.get(MonitorCacheConfig.cacheGroupsHosts + groupsId);
-            FileIoUtil.writeFile(fileName, result, false);
-        }
-        String result = FileIoUtil.readFile(fileName);
-        if (result != null && result.length() > 0) {
-            return gson.fromJson(result, HashSet.class);
-        }
-        return new HashSet<>();
-    }
-
-    /**
      * @param hosts
-     *
      * @return
      */
     List<String> getHostStatus(List<String> hosts, boolean isAlarm) {
-        String[] strings = new String[hosts.size()];
-        int count = 0;
-        String key = "";
-        for (String host : hosts) {
-            if (isAlarm) {
-                key = RedisUtil.app + "_" + MonitorCacheConfig.cacheAgentAlarmNumber + host;
-            } else {
-                key = RedisUtil.app + "_" + MonitorCacheConfig.cacheHostIsUpdate + host;
-            }
-            strings[count] = key;
-            count += 1;
-        }
-        if (strings.length > 0) {
-            Jedis jedis = redisUtil.getJedis();
-            List<String> result = jedis.mget(strings);
-            return result;
-        }
-        return new ArrayList<>();
+          return MonitorUtil.getHostStatus(hosts, isAlarm);
     }
 
     /**
@@ -924,7 +883,6 @@ public class MonitorController {
         String host;
         for (String alarm : list) {
             host = hosts.get(count);
-//            info(host + " " + alarm);
             count += 1;
             if (alarm != null && alarm.length() > 0) {
                 logger.info(host + "is alarmis alar " + alarm);
@@ -960,47 +918,8 @@ public class MonitorController {
     }
 
     /**
-     * @param groupsId
-     *
-     * @return
-     */
-    List<String> getHosts(String groupsId) {
-        HashSet<String> hosts = getGroupsHosts(groupsId);
-        List<String> hostList = new ArrayList<String>();
-        for (String host : hosts) {
-            hostList.add(host);
-        }
-        return hostList;
-    }
-
-    /**
-     * 检查缓存文件，并获取内容
-     *
-     * @param name
-     * @param interval
-     *
-     * @return
-     */
-    public boolean checkCacheFileTime(String name, long interval) {
-        String fileName = tempDir + separator + name;
-
-        File file = new File(fileName);
-        if (file.exists()) {
-            if (System.currentTimeMillis() / 1000 - file.lastModified() / 1000 > interval) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    /**
      * 获取agent报警的信息
-     *
      * @param host
-     *
      * @return
      */
     MonitorMessagesEntity getAgentMessages(String host) {
@@ -1072,7 +991,7 @@ public class MonitorController {
     void checkHostIsUpdate(String groupsId, Jedis jedis) throws Exception {
         Map<String, String> okMap = new HashMap<>();
         Map<String, String> faildMap = new HashMap<>();
-        List<String> hostList = getHosts(groupsId);
+        List<String> hostList = MonitorUtil.getHosts(groupsId);
         setAgentAlarmStatus(hostList);
         String host;
         int count = 0;
@@ -1136,26 +1055,7 @@ public class MonitorController {
         redisUtil.setex(MonitorCacheConfig.cacheAgentUnreachable + "_" + groupsId, 300, gson.toJson(faildMap));
     }
 
-    /**
-     * 获取组信息
-     *
-     * @return
-     */
-    Map<String, String> getGroups() {
-        String groups = "";
-        String fileName = tempDir + separator + "cache_groups_name";
-        if (checkCacheFileTime("cache_groups_name", 1800)) {
-            groups = redisUtil.get(MonitorCacheConfig.cacheGroupName);
-            FileIoUtil.writeFile(fileName, groups, false);
-        }
-        groups = FileIoUtil.readFile(fileName);
-        logger.info("获取到grous " + groups);
-        Map<String, String> groupsMap = new HashMap<>();
-        if (groups != null) {
-            groupsMap = gson.fromJson(groups, HashMap.class);
-        }
-        return groupsMap;
-    }
+
 
 
     /**
@@ -1178,7 +1078,7 @@ public class MonitorController {
         if (isCheck.equals("false")) {
             return;
         }
-        Map<String, String> groupsMap = getGroups();
+        Map<String, String> groupsMap = MonitorUtil.getGroups();
         List<String> groupsList = new ArrayList<>();
         String[] groupsKey = new String[groupsMap.size()];
         int groupsCount = 0;
@@ -1278,17 +1178,10 @@ public class MonitorController {
 
     /**
      * 设置默认配置
-     *
      * @return
      */
     MonitorConfigureEntity getMonitorConfig() {
-        info("获取默认配置");
-        MonitorConfigureEntity configureEntity = new MonitorConfigureEntity();
-        configureEntity.setConfigureId(0);
-        configureEntity.setMonitorConfigureTp("template");
-        configureEntity.setTemplateId("0");
-        configureEntity.setIsValid(1);
-        return configureEntity;
+       return MonitorUtil.getMonitorConfig();
     }
 
     /**
@@ -1312,6 +1205,10 @@ public class MonitorController {
                 }
                 configId = configId.replace("\"", "");
                 String config = redisUtil.get(MonitorCacheConfig.cacheConfigureKey + configId);
+                if (config == null || config.length()<1){
+                    info("获取到失败的配置,跳出: "+ configId);
+                    continue;
+                }
                 info("get config data configId " + configId + " " + config);
                 MonitorConfigureEntity configureEntity = gson.fromJson(config, MonitorConfigureEntity.class);
                 if (!hConfigs.containsKey(id)) {
@@ -1322,7 +1219,7 @@ public class MonitorController {
                 // 配置文件按id存放
                 CONFIGS.put(configId, configureEntity);
                 // 主机的所属业务线
-                if (configureEntity.getGroupsId().length() > 0) {
+                if (configureEntity!=null && configureEntity.getGroupsId().length() > 0) {
                     HOST_GROUP = configureEntity.getGroupsId();
                 }
 
@@ -1496,28 +1393,9 @@ public class MonitorController {
         }
     }
 
-    /**
-     * 获取脚本内容
-     * 2017-02-03
-     */
-    MonitorScriptsEntity getScripts(String scriptsId) {
-        String scriptUrl = Configure.get("sysInfoScriptApi");
-        for (int i = 0; i < 5; i++) {
-            String script = HttpUtil.sendPost(scriptUrl, "scriptsId=" + scriptsId);
-            if (script != null && script.length() > 1) {
-                MonitorScriptsEntity scriptsEntity = gson.fromJson(script, MonitorScriptsEntity.class);
-                return scriptsEntity;
-            }
-            info("获取脚本重试" + i);
-        }
-        return new MonitorScriptsEntity();
-    }
 
     /**
      * 获取拥有脚本的脚本内容
-     * String result = redisUtil.get(MonitorCacheConfig.cacheScriptKey + id + "");
-     * if (result != null && result.length() > 0) {
-     * monitorScriptsEntity = gson.fromJson(result, MonitorScriptsEntity.class);
      */
     void setScriptConfigs() {
         FileIoUtil.makeDir(tempDir);
@@ -1891,12 +1769,6 @@ public class MonitorController {
     }
 
     /**
-     * 缓存各种报警检查装
-     * 避免对redis造成压力
-     * 每次检查和上次结果一样就不进行redis更新
-     */
-
-    /**
      * 上报监控结果
      *
      * @param entity
@@ -2113,37 +1985,7 @@ public class MonitorController {
     }
 
     /**
-     * @return
-     */
-    String getAdminGroup() {
-        String adminGroup = redisUtil.get(MonitorCacheConfig.cacheIsAdmin);
-        if (adminGroup == null) {
-            adminGroup = "";
-        }
-        return adminGroup;
-    }
-
-    /**
-     * 获取默认的管理员组
-     *
-     * @param itemEntity
-     *
-     * @return
-     */
-    String getAdminGroup(MonitorItemEntity itemEntity) {
-        // 在项目中配置发送给管理员的项目全部发报警给管理员
-        String adminGroup;
-        if (itemEntity.getIsAdmin() != null && itemEntity.getIsAdmin().length() > 0) {
-            adminGroup = getAdminGroup();
-        } else {
-            adminGroup = "";
-        }
-        return adminGroup;
-    }
-
-    /**
      * 生成报警信息
-     *
      * @param scriptId
      * @param status
      */
@@ -2185,7 +2027,6 @@ public class MonitorController {
             message = "报警啦";
         }
 
-//        MonitorConfigureEntity configureEntity = SCRIPT_ITEM_CONFIG.get(itemEntity.getItemId() + "");
         MonitorConfigureEntity configureEntity = CONFIGS.get(pushEntity.getConfigId());
 
         // 在项目中配置发送给管理员的项目全部发报警给管理员
@@ -2257,37 +2098,17 @@ public class MonitorController {
     }
 
     /**
+     * 20170218
      * @param command
-     *
      * @return
      */
     String runScript(String command) {
-        String result = "";
-        String line = "";
-        try {
-            info("run 获取到脚本 " + command);
-            Process process = runtime.exec(command);
-            InputStream is = process.getInputStream();
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
-            while ((line = br.readLine()) != null) {
-                info(line);
-                result += line;
-            }
-            is.close();
-            isr.close();
-            br.close();
-        } catch (Exception e) {
-            logger.error("脚本执行出错", e);
-        }
-        return result;
+        return CommandUtil.runScript(command);
     }
 
     /**
      * 脚本执行
-     *
      * @param command
-     *
      * @return
      */
     List<PushEntity> run(String command) {
@@ -2308,9 +2129,7 @@ public class MonitorController {
 
     /**
      * 清除过期的报警数据
-     *
      * @param dataMap
-     *
      * @return
      */
     Map<String, String> clearExpiredMap(Map<String, String> dataMap) {
@@ -2328,52 +2147,6 @@ public class MonitorController {
             }
         }
         return newMap;
-    }
-
-    /**
-     * @param faildData
-     * @param okData
-     * @param warningData
-     * @param unknownData
-     * @param type
-     * @param ids
-     */
-    Map getGroupData(Map<String, String> faildData, Map<String, String> okData, Map<String, String> warningData, Map<String, String> unknownData, String type, ArrayList<String> ids) {
-        Map map = new HashMap();
-        String currTime = DateUtil.getCurrTime() + "";
-        for (String id : ids) {
-            switch (type) {
-                case "ok":
-                    okData.put(id, currTime);
-                    faildData.remove(id);
-                    unknownData.remove(id);
-                    warningData.remove(id);
-                    break;
-                case "faild":
-                    faildData.put(id, currTime);
-                    unknownData.remove(id);
-                    warningData.remove(id);
-                    okData.remove(id);
-                    break;
-                case "warning":
-                    warningData.put(id, currTime);
-                    faildData.remove(id);
-                    unknownData.remove(id);
-                    okData.remove(id);
-                    break;
-                case "unknown":
-                    unknownData.put(id, currTime);
-                    faildData.remove(id);
-                    warningData.remove(id);
-                    okData.remove(id);
-                    break;
-            }
-        }
-        map.put("ok", okData);
-        map.put("faild", faildData);
-        map.put("warning", warningData);
-        map.put("unknown", unknownData);
-        return map;
     }
 
     /**

@@ -150,7 +150,6 @@
     }
 
     function deleteConfig(id){
-
         url = "/monitor/configure/"+site+"/delete";
         parent.layer.confirm("点击同意后,将删除数据", {
             btn: ['同意','不同意'], //按钮
@@ -161,7 +160,6 @@
         }, function(){
             parent.layer.msg("取消操作",  {icon:2})
         });
-
     }
 
     /**
