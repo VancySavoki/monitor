@@ -2,6 +2,7 @@ package com.asura.monitor.graph.controller;
 
 import com.asura.framework.base.paging.SearchMap;
 import com.asura.monitor.configure.conf.MonitorCacheConfig;
+import com.asura.monitor.graph.quartz.MergerDataQuartz;
 import com.asura.monitor.graph.util.FileWriter;
 import com.asura.resource.entity.CmdbResourceServerEntity;
 import com.asura.resource.service.CmdbResourceServerService;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import redis.clients.jedis.Jedis;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.asura.monitor.graph.util.FileWriter.dataDir;
@@ -65,6 +65,14 @@ public class MergeController {
         }
     }
 
+    @RequestMapping("test")
+    @ResponseBody
+    public String  start(){
+        MergerDataQuartz m = new MergerDataQuartz();
+        m.start();
+        return "ok";
+    }
+
     /**
      * 数据合并接口
      *
@@ -84,17 +92,6 @@ public class MergeController {
         if (ip != null && ip.length() > 6) {
             searchMap.put("ipAddress", ip);
         }
-        ArrayList<Integer> arrayList = new ArrayList();
-        arrayList.add(3);
-        arrayList.add(7);
-        arrayList.add(15);
-        arrayList.add(30);
-        arrayList.add(60);
-        arrayList.add(90);
-        arrayList.add(120);
-        arrayList.add(180);
-        arrayList.add(240);
-        arrayList.add(360);
         RedisUtil redisUtil = new RedisUtil();
         Jedis jedis = redisUtil.getJedis();
         List<CmdbResourceServerEntity> ips = serverService.getDataList(searchMap, "selectAllIp");

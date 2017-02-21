@@ -28,7 +28,7 @@ public class PermissionsCheck {
     @Autowired
     private AuthorityPermissionService permissionService;
 
-    RedisUtil redisUtil = new RedisUtil();
+    private RedisUtil redisUtil = new RedisUtil();
 
     /**
      * @param session
@@ -36,6 +36,9 @@ public class PermissionsCheck {
      */
     public String getRedisSession(HttpSession session) {
         String sessionId = session.getId();
+        if (redisUtil==null){
+             redisUtil = new RedisUtil();
+        }
         String result = redisUtil.get(sessionId);
         return result;
     }

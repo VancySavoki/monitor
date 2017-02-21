@@ -287,16 +287,40 @@ public class ApiController {
     }
 
     /**
-     * 发送监控报警信息，
-     * 从队列读取数据进行发送
-     * 接收到消息后，从队列读取数据
-     * @param request
-     * @return
+     * 消息发送
+     * @param messagesEntity
      */
-    @RequestMapping("/send/messages")
-    @ResponseBody
-    public ResponseVo send(HttpServletRequest request){
+    void sendMonitorMessages(MonitorMessagesEntity messagesEntity){
+//        MonitorMessagesEntity messagesEntity = gson.fromJson(queueData, MonitorMessagesEntity.class);
+        if (messagesEntity != null) {
+            // 报警开关
+            String alarmSwitch = redisUtil.get(MonitorCacheConfig.cacheAlarmSwitch);
+            if (alarmSwitch != null && alarmSwitch.length() > 0 && alarmSwitch.equals("1")) {
+                LOGGER.info("开始发送报警短信" + gson.toJson(messagesEntity));
+                PushEntity entity = new PushEntity();
+                if (messagesEntity.getValue() != null) {
+                    entity.setIp(messagesEntity.getIp());
+                    entity.setValue(messagesEntity.getValue());
+                    entity.setName(messagesEntity.getIndexName());
+                }
+                if (entity != null) {
+                    LOGGER.info("开始检查是否可以发送报警");
+                    MonitorIndexAlarmEntity alarmEntity = checkAlarm(entity, messagesEntity.getIp());
+                    LOGGER.info(alarmEntity);
+                    if (!alarmEntity.getSendAlarm() && alarmEntity.getIsConfigure()) {
+                        LOGGER.info("检查到不能发送报警信息" + gson.toJson(messagesEntity));
+                        return;
+                    }
+                }
+                sendMessages(messagesEntity);
+            }
+        }
+    }
 
+    /**
+     * 从redis队列读取要发送的消息
+     */
+    void sendQueueMessages(){
         // 获取队列的大小
         Long queueLength = redisUtil.llen(MonitorCacheConfig.cacheAlarmQueueKey);
 
@@ -305,32 +329,31 @@ public class ApiController {
             String queueData =  redisUtil.rpop(MonitorCacheConfig.cacheAlarmQueueKey);
             if (queueData !=null && queueData.length() > 0) {
                 MonitorMessagesEntity messagesEntity = gson.fromJson(queueData, MonitorMessagesEntity.class);
-                   if (messagesEntity != null) {
-                    // 报警开关
-                    String alarmSwitch = redisUtil.get(MonitorCacheConfig.cacheAlarmSwitch);
-                    if (alarmSwitch != null && alarmSwitch.length() > 0 && alarmSwitch.equals("1")) {
-                        LOGGER.info("开始发送报警短信" + gson.toJson(messagesEntity));
-                        PushEntity entity = new PushEntity();
-                        if (messagesEntity.getValue()!=null) {
-                            entity.setIp(messagesEntity.getIp());
-                            entity.setValue(messagesEntity.getValue());
-                            entity.setName(messagesEntity.getIndexName());
-                        }
-                        if (entity!=null){
-                            LOGGER.info("开始检查是否可以发送报警");
-                            MonitorIndexAlarmEntity alarmEntity = checkAlarm(entity, messagesEntity.getIp());
-                            LOGGER.info(alarmEntity);
-                            if(!alarmEntity.getSendAlarm() && alarmEntity.getIsConfigure()){
-                                LOGGER.info("检查到不能发送报警信息"+gson.toJson(messagesEntity));
-                                continue;
-                            }
-                        }
-                        sendMessages(messagesEntity);
-                    }
-                }
+                sendMonitorMessages(messagesEntity);
             }
         }
+    }
+
+    /**
+     * 发送监控报警信息，
+     * 从队列读取数据进行发送
+     * 接收到消息后，从队列读取数据
+     * @param request
+     * @param monitorMessagesEntity
+     * @return
+     */
+    @RequestMapping("/send/messages")
+    @ResponseBody
+    public ResponseVo send(MonitorMessagesEntity monitorMessagesEntity, HttpServletRequest request){
         PushEntity entity = new PushEntity();
+        LOGGER.info(gson.toJson(monitorMessagesEntity));
+        if (monitorMessagesEntity == null || monitorMessagesEntity.getMessages() == null || monitorMessagesEntity.getServerId() == null){
+            entity.setMessages("从redis队列获取报警信息");
+            sendQueueMessages();
+        }else{
+            entity.setMessages("直接发送报警信息");
+            sendMonitorMessages(monitorMessagesEntity);
+        }
         entity.setServer(request.getLocalAddr());
         return ResponseVo.responseOk(entity);
     }
@@ -407,7 +430,6 @@ public class ApiController {
         if (entity.getEmail()!=null && entity.getEmail().length()>1) {
             globaltController = new MonitorGlobaltController();
             MonitorMessageChannelEntity channelEntity = getChannelEntity(channelService, "email");
-//        LOGGER.info(entity.getEmail());
             if (entity.getEmail() != null && entity.getEmail().length() > 1) {
                 MailEntity mailEntity = getEmailEntity(channelService, entity);
                 String template = channelEntity.getMailTemplate();

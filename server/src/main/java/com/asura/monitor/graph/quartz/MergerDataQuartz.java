@@ -45,6 +45,7 @@ public class MergerDataQuartz {
             File[] fileList = files.listFiles();
             for (File file: fileList){
                 if (file.isDirectory()) {
+                    LOGGER.info("添加 " + file.getName() + "到合并队列");
                     jedis.lpush(RedisUtil.app+"_"+MonitorCacheConfig.mergerDataQueue, file.getName());
                 }
             }
@@ -100,6 +101,8 @@ public class MergerDataQuartz {
                     } catch (Exception e) {
                     }
                     LOGGER.info("开始启动任务计划 " + ip + " end " + (System.currentTimeMillis() / 1000 - start));
+                }else{
+                    break;
                 }
             }
         }

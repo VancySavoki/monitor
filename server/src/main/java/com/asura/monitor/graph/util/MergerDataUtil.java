@@ -52,12 +52,28 @@ public class MergerDataUtil extends Thread {
         this.dayNumber = dayNumber;
     }
 
-    public void run(){
+    public void run() {
+
         init();
+        // 如果时间是01月01日志，那么数据就把去年的复制过来
+        if (DateUtil.getDate(DateUtil.DATE_FORMAT).contains("01-01")) {
+            mergerLastYear();
+            return;
+        }
         mergerData(dayNumber);
     }
 
-    void init(){
+    /**
+     * 初始化新一年的数据
+     */
+    void mergerLastYear() {
+        String[] lastDate = DateUtil.getLastNDay(3).split("-");
+        String year = lastDate[0];
+        String dir = dataDir + separator + "graph" + separator + ip + separator + groups + separator + year + separator + "day" + dayNumber + separator;
+        FileWriter.writeFile(fileName, FileRender.readFile(dir + name), false);
+    }
+
+    void init() {
         setFileName(dayNumber);
     }
 
@@ -65,33 +81,33 @@ public class MergerDataUtil extends Thread {
      * 合并数据
      * @param day
      */
-    void mergerData(int day){
-        File file = new File(fileName);
-        if (file.exists()){
-            // 获取一天需要的数据量
-            int interval = maxNumber / day ;
-            // 获取一天的时间的数据
-            ArrayList<ArrayList> datas = getDatas(day);
-            // 获取一天数据需要合并的条目数
-            int mergerNumber = datas.size() / interval;
-            StringBuffer writeData = getWriteData(datas,  mergerNumber);
-            FileWriter.writeFile(fileName, writeData.toString(), true);
-            int rows = FileRender.getFileRows(fileName);
-            if (rows >= maxNumber) {
-//                logger.info("删除 " + fileName + (rows - maxNumber) + "  行");
-                FileWriter.deleteFileLine(fileName, rows - maxNumber);
-            }
-        }else{
-            logger.info("开始初始化合并文件: "+fileName);
-            mergerDayData(day);
+    void mergerData(int day) {
+        // 获取一天需要的数据量
+        int interval = maxNumber / day;
+        // 获取一天的时间的数据
+        ArrayList<ArrayList> datas = getDatas(1);
+        // 获取一天数据需要合并的条目数
+
+        int mergerNumber = datas.size() / interval;
+        StringBuffer writeData = getWriteData(datas, mergerNumber);
+        if (writeData.toString().length() > 10 ) {
+            logger.info("开始写入" + fileName);
+            FileWriter.writeFile(fileName, writeData.toString().trim(), true);
+        }
+        int rows = FileRender.getFileRows(fileName);
+        if (rows >= maxNumber) {
+            logger.info("删除 " + fileName + (rows - maxNumber) + "  行");
+            FileWriter.deleteFileLine(fileName, rows - maxNumber);
         }
     }
 
+
     /**
      * 获取指定天数的数据
+     *
      * @return
      */
-    ArrayList<ArrayList> getDatas(int dayNumber){
+    ArrayList<ArrayList> getDatas(int dayNumber) {
         String startT = getLastNDay(dayNumber);
         String endT = getYestDay();
         ArrayList<ArrayList> datas;
@@ -101,9 +117,10 @@ public class MergerDataUtil extends Thread {
 
     /**
      * 检查文件是否正常
+     *
      * @return
      */
-    boolean checkFileTime(String lastData, String date){
+    boolean checkFileTime(String lastData, String date) {
         try {
             if (lastData != null && lastData.length() > 3) {
                 String[] datas = lastData.split(" ");
@@ -114,34 +131,43 @@ public class MergerDataUtil extends Thread {
             } else {
                 return true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             return true;
         }
         return false;
     }
 
     /**
-     *
      * @param datas
      * @param interval
+     *
      * @return
      */
-    StringBuffer getWriteData(ArrayList<ArrayList> datas, int interval){
-        String lastData = System.currentTimeMillis()-100000 + " " + 0;
-        List<String> lastDatas = FileRender.readLastNLine(fileName, 3);
-        for(String r: lastDatas){
-            if (r!=null&&r.length()>5){
-                lastData = r;
+    StringBuffer getWriteData(ArrayList<ArrayList> datas, int interval) {
+        if (interval == 0){
+            interval = 1;
+        }
+        String lastData = System.currentTimeMillis()/1000 - 1300000 + " " + "000000";
+        List<String> lastDatas = FileRender.readLastNLine(fileName, 13);
+        if (lastDatas != null ) {
+            for (String r : lastDatas) {
+                if (r != null && r.length() > 5) {
+                    lastData = r;
+                }
             }
         }
         StringBuffer writeData = new StringBuffer();
         int counter = 0;
         Double value = 1.0;
         for (ArrayList<Double> data : datas) {
-            if(!checkFileTime(lastData, ""+data.get(0))){
+            if (!checkFileTime(lastData, "" + data.get(0))) {
+                break;
+            }
+            if (interval == 1){
+                writeData.append(data.get(0) + " " + df.format(data.get(1)) + "\n");
                 continue;
             }
-            if (counter % interval == 0) {
+            if (counter % interval == 0 && interval > 1) {
                 value = value / interval;
                 writeData.append(data.get(0) + " " + df.format(value) + "\n");
                 value = 1.0;
@@ -149,9 +175,10 @@ public class MergerDataUtil extends Thread {
                 value += data.get(1);
             }
             counter += 1;
-            if (counter >= datas.size()){
+            if (counter >= datas.size() && interval > 1) {
                 writeData.append(data.get(0) + " " + df.format(value) + "\n");
             }
+
         }
         return writeData;
     }
@@ -165,16 +192,17 @@ public class MergerDataUtil extends Thread {
         FileWriter.writeFile(fileName, writeData.toString(), false);
     }
 
-// 获取目录
+    // 获取目录
     void setFileName(int dayNumber) {
         DateUtil dateUtil = new DateUtil();
-        String dir = dataDir
-                + separator + "graph"
-                + separator + ip
-                + separator + groups
-                + separator + dateUtil.getDate("yyyy")
-                + separator + "day" + dayNumber
-                + separator;
+        String dir = dataDir + separator + "graph" + separator + ip + separator + groups + separator + dateUtil.getDate("yyyy") + separator + "day" + dayNumber + separator;
+
+        if (!new File(dir).exists()) {
+            FileWriter.makeDirs(dir);
+        }
         this.fileName = dir + name;
+        if (!new File(fileName).exists()){
+            FileWriter.writeFile(fileName, "", false);
+        }
     }
 }

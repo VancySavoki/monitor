@@ -243,7 +243,6 @@ public class ServerController {
             searchMap.put("isOff",isOff);
         }
         PagingResult<CmdbResourceServerEntity> result;
-        System.out.println(hostIp);
         result = service.findAll(searchMap, pageBounds, "selectByAll");
         if(hostIp !=null && result.getTotal()<1){
             searchMap.remove("hostIp");
@@ -392,7 +391,7 @@ public class ServerController {
             return "请登陆后操作";
         }
         String dept = ldapAuthenticate.getSignUserInfo("department", "sAMAccountName=" + user);
-        CmdbResourceServerEntity resourceServerEntity = service.findById(id,CmdbResourceServerEntity.class);
+        CmdbResourceServerEntity resourceServerEntity = service.findById(id, CmdbResourceServerEntity.class);
         if (! user.equals("admin") && ! dept.contains("运维")){
             return "no permissions";
         }
@@ -500,11 +499,15 @@ public class ServerController {
             SearchMap map = new SearchMap();
             map.put("status", 1);
             map.put("hosts", upList);
-            service.updatePing(map);
+            if (upList.size() > 0 ) {
+                service.updatePing(map);
+            }
             SearchMap downMap = new SearchMap();
             downMap.put("status", 0);
             downMap.put("hosts", downList);
-            service.updatePing(downMap);
+            if (downList.size()>0) {
+                service.updatePing(downMap);
+            }
         }
         return "ok";
     }

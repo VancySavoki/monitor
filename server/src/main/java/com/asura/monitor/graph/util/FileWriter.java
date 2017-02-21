@@ -62,15 +62,7 @@ public class FileWriter {
      *         文件内容
      */
     public static void writeFile(String file, String content, boolean append) {
-//        file = file.replace("..", "");
-//        makeDirs(file);
-//        try {
-//            java.io.FileWriter fileWriter = new java.io.FileWriter(file, append);
-//            fileWriter.write(content + "\n");
-//            fileWriter.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+
         // 防止等待磁盘
         FileThread thread = new FileThread(file, content, append);
         thread.start();
@@ -81,7 +73,7 @@ public class FileWriter {
                 }
             }
             if (thread.isAlive()) {
-                thread.stop();
+                thread.interrupt();
                 logger.error("退出文件写入线程...");
             }
         }catch (Exception e){
@@ -118,6 +110,12 @@ public class FileWriter {
      * @param value
      */
     public static void writeHistory(String type, String ip, String name, String value) {
+        // 防止非数字的写入到文件
+        try {
+            Double.valueOf(value);
+        }catch (Exception e){
+            return;
+        }
 
         // 拼接文件目录
         String dir = dataDir + separator + "graph" + separator +
@@ -199,9 +197,6 @@ public class FileWriter {
 
     }
 
-//    public static void main(String[] args) {
-//        FileWriter.writeFile("1.txt","a",false);
-//    }
 
     /**
      * 获取系统信息的希尔目录
@@ -289,4 +284,5 @@ public class FileWriter {
             e.printStackTrace();
         }
     }
+
 }
