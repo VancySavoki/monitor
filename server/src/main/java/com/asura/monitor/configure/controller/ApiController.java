@@ -68,13 +68,13 @@ public class ApiController {
 
 
     // 获取临时文件目录
-    public static String separator = System.getProperty("file.separator");
-    private static String tempDir = System.getProperty("java.io.tmpdir") + separator + "monitor" + separator;
+    public static final String separator = System.getProperty("file.separator");
+    private static final String tempDir = System.getProperty("java.io.tmpdir") + separator + "monitor" + separator;
     private static final Logger LOGGER = Logger.getLogger(ApiController.class);
 
     private static final RedisUtil redisUtil = new RedisUtil();
 
-    private  static final Gson gson = new Gson();
+    private static final Gson gson = new Gson();
 
     @Autowired
     private MonitorMessagesService messagesService;
@@ -86,14 +86,14 @@ public class ApiController {
     private MonitorMessageChannelService channelService;
 
     private static MonitorGlobaltController globaltController ;
-    private static  final Runtime runtime = Runtime.getRuntime();
+    private static final Runtime runtime = Runtime.getRuntime();
 
     @Autowired
     private MonitorReportDayService reportDayService;
 
     // 报错报警的参数信息，启动或更改时改数据
-    private   static Map<String, MonitorIndexAlarmEntity> alarmEntities;
-    private   static  long alarmEntitiesTime;
+    private static Map<String, MonitorIndexAlarmEntity> alarmEntities;
+    private static long alarmEntitiesTime;
 
 
     /**
@@ -103,11 +103,10 @@ public class ApiController {
      * @return
      */
     String getIndexName(String  indexName){
-        String[] inexs = indexName.split("\\.");
+        String[] index = indexName.split("\\.");
         String result = "";
-        System.out.println(inexs.length);
-        for (int i=1;i< inexs.length;i++){
-            result += inexs[i] +".";
+        for (int i=1;i< index.length;i++){
+            result += index[i] +".";
         }
         result = result.substring(0,result.length()-1);
         return result;

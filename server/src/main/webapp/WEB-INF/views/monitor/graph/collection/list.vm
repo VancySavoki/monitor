@@ -52,8 +52,9 @@
 <script>
 
     function set_images(value, ip){
+        $.cookie("select_all_ip_textarea", ip.replace(/,/g, "\n"))
         $.cookie("selectImages", value,{"path":"/"});
-        window.location = '/monitor/graph/all/index?ip='+ip
+        window.location = '/monitor/graph/all/index?ip='+ip.split(",")[0]
     }
     function addConfig(id){
         if(!id){
@@ -109,6 +110,9 @@
 
             "columns": [ // 数据映射
                 {"data": "ip","mRender":function (data) {
+                    if (data.length > 100){
+                        return "<span title='"+data+"'>"+data.substring(0, 100)+"</span>"
+                    }
                     return data;
                 }},
                 {"data": "images","mRender":function (data) {

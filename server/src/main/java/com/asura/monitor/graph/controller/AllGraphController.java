@@ -185,6 +185,8 @@ public class AllGraphController {
 
         if (ips != null) {
             model.addAttribute("ips", ips.split(","));
+        }else{
+            model.addAttribute("ips", ip.split(","));
         }
 
         if(isAll != null && isAll.equals("1")) {

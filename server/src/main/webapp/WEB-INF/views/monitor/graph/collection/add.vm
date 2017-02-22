@@ -7,7 +7,7 @@
     <div class="modal-dialog"
          style="margin-top: 0px; width: 50%; ">
         <div class="modal-content"
-             style="height: 390px; width: 100%; ">
+             style="height: 410px; width: 100%; ">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">
                     <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
@@ -34,8 +34,8 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">ip地址:</label>
                             <div class="col-sm-9">
-                                <input type="text" name="ip" class="form-control"
-                                       value="$!{configs.ip}">
+                                <textarea type="text" name="ip" class="form-control"
+                                       >$!{configs.ip}</textarea>
                             </div>
                         </div>
                     </div>

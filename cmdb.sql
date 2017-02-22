@@ -1177,6 +1177,6 @@ CREATE TABLE `monitor_images_collection` (
   `user` varchar(32) DEFAULT NULL COMMENT '收录人',
   `description` varchar(100) DEFAULT NULL COMMENT '描述信息',
   `last_modify_time` varchar(32) DEFAULT NULL,
-  `ip` varchar(32) comment "ip地址",
+  `ip` text comment "ip地址",
   PRIMARY KEY (`collection_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
