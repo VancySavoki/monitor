@@ -8,7 +8,7 @@
             <ul id="nav" class="dropdown dropdown-horizontal navbar-nav" style="margin-top:9px;margin-left: 10px;">
 
                 <li class="active">
-                    <a aria-expanded="false" role="button" href="/monitor/global/index"><font style="color:#1ab394">返回首页</font> </a>
+                    <a aria-expanded="false" role="button" href="/monitor/global/Index"><font style="color:#1ab394">返回首页</font> </a>
                 </li>
 
                 <li class="dropdown-toggle dropdown">

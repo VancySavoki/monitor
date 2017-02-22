@@ -421,6 +421,9 @@ public class AllGraphController {
             port = (String) hostIdMap.get(server).get("port");
         } else {
             serverId = redisUtil.get(MonitorCacheConfig.hostsIdKey + server);
+            if (serverId == null ){
+                return "[]";
+            }
             String portData = redisUtil.get(MonitorCacheConfig.cacheAgentServerInfo + serverId);
             if (portData.length() > 0) {
                 Map serverMap = gson.fromJson(portData, HashMap.class);
