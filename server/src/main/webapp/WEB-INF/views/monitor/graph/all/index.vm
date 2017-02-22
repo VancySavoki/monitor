@@ -75,10 +75,13 @@
     }
     function selectAllImages(isLine) {
         parent.layer.msg("已选择服务器" + $('#select_all_ip_textarea').val(),  {icon:1})
-        if(isLine==1){
+        if(isLine == 1){
             $.cookie("is_all_select", "");
         }else{
             $.cookie("is_all_select", 1);
+        }
+        if(isLine == 2){
+            $.cookie("is_all_select", 2);
         }
         $.cookie("is_range","");
         $('#show_graph_select_ip').modal("toggle");
@@ -187,6 +190,13 @@
                         <i class="fa fa-line-chart"></i>&nbsp;单线图
                        </button>
                       </span>
+                       <span class="input-group-btn">
+                        <button style="margin-bottom: 15px;margin-top: 27px;margin-left: 5px;"
+                                onclick="selectAllImages(2)" class="btn btn-warning btn-lg btn-outline"
+                                type="button">
+                        <i class="fa fa-area-chart"></i>&nbsp;多线图
+                       </button>
+                      </span>
                 </div>
             </div>
         </div>
@@ -289,6 +299,11 @@
             allip = "${ip}"
         }
         if(data.length>5){
+            is_all_select = $.cookie("is_all_select")
+            // 多线条图像
+            if(is_all_select == "2"){
+                allip += ",2"
+            }
             url = "/monitor/graph/collection/save";
             result = post({ip: allip, images:data},url);
             parent.layer.msg(JSON.stringify(result),  {icon:1});
@@ -385,9 +400,14 @@
         allip = get_all_ip();
         if (allip.indexOf("${ip}")==-1){
             allip = "${ip}";
+            $.cookie("select_all_ip_textarea", "")
         }
         $.cookie("selectImages", chk_value,{path:"/"})
         url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+chk_value+"&ips="+allip
+        is_mline = $.cookie("is_all_select")
+        if(is_mline == "2"){
+            url = url +"&mline=1"
+        }
         $('#show_image_status_id').html($.cookie("s"))
         $('#iframepage').attr("src", url);
     }
@@ -489,7 +509,8 @@
         $.cookie(cookieName, chk_value, {path:"/"});
 
         type = $('#img_type').val()
-        urls = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT;
+        ips =  get_all_ip()
+        urls = "/monitor/graph/all/sub?ip="+ip+"&select="+chk_value+"&startT="+startT+"&endT="+endT+"&ips="+ips;
         if(type){
             url = urls+"&type=1";
         }else{
@@ -502,12 +523,17 @@
         }
 
         is_all_select = $.cookie("is_all_select")
-        ips =  get_all_ip()
-        if(is_all_select=="1"){
-            url = urls +"&isAll=1&ips="+ips;
-        }else {
-            url = urls + "&ips="+ips
+
+        if(is_all_select == "1"){
+            url = urls +"&isAll=1";
         }
+
+
+        // 多线条图像
+        if(is_all_select == "2"){
+            url = url + "&mline=1"
+        }
+
 
         $('#iframepage').attr("src",url);
         if(img){
@@ -561,6 +587,4 @@
     window.setInterval("reinitIframe()", 3400);
 
 </script>
-
 </body>
-

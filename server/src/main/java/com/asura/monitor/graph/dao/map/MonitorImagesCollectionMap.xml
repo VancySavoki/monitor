@@ -25,6 +25,7 @@
             ip like concat("%",#{key},"%")
             )
         </if>
+        ORDER by collection_id DESC
     </select>
 
     <select id="findById" resultType="com.asura.monitor.graph.entity.MonitorImagesCollectionEntity">

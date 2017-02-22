@@ -52,10 +52,25 @@
 <script>
 
     function set_images(value, ip){
-        $.cookie("select_all_ip_textarea", ip.replace(/,/g, "\n"))
+        ips = ip.split(",")
+        newip = ""
+        if(ips.length > 1){
+            is_all = ips[ips.length-1]
+            if(is_all == "2"){
+                $.cookie("is_all_select", "2")
+            }
+            for(i=0; i<ips.length-1; i++){
+                newip += ips[i]+","
+            }
+        }else{
+            newip = ip
+            $.cookie("is_all_select", "")
+        }
+        $.cookie("select_all_ip_textarea", newip.replace(/,/g, "\n"))
         $.cookie("selectImages", value,{"path":"/"});
         window.location = '/monitor/graph/all/index?ip='+ip.split(",")[0]
     }
+
     function addConfig(id){
         if(!id){
             id=0;

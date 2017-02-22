@@ -114,11 +114,13 @@ public class AllGraphController {
      * @param width
      * @param dayNumber
      * @param model
-     *
+     * @param ips
+     * @param isAll
+     * @param mline
      * @return
      */
     @RequestMapping("sub")
-    public String sub(String ip, String select, String startT, String endT, String type, String width, Model model, String dayNumber, String isAll, String ips) {
+    public String sub(String ip, String select, String startT, String endT, String type, String width, Model model, String dayNumber, String isAll, String ips, String mline) {
         ArrayList dir ;
         // 获取默认数据
         if (ip == null || ip.length() < 1) {
@@ -189,9 +191,14 @@ public class AllGraphController {
             model.addAttribute("ips", ip.split(","));
         }
 
+        if(mline != null && mline.equals("1")) {
+            return "/monitor/graph/all/mline";
+        }
+
         if(isAll != null && isAll.equals("1")) {
             return "/monitor/graph/all/merger";
         }
+
         if (type == null) {
             return "/monitor/graph/all/sub";
         } else {
@@ -360,16 +367,6 @@ public class AllGraphController {
 
         }
         return new Gson().toJson(arrayList);
-    }
-
-    /**
-     * 多图绑定
-     *
-     * @return
-     */
-    @RequestMapping("bind")
-    public String bind() {
-        return "/monitor/graph/all/subbind";
     }
 
     /**
