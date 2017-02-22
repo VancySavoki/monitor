@@ -197,7 +197,10 @@ public class SaveController {
         String user = permissionsCheck.getLoginUser(request.getSession());
         MonitorContactsEntity entity = contactsService.findById(id, MonitorContactsEntity.class);
         String lastUser = entity.getLastModifyUser();
-        if (lastUser.equals(user) || user.equals("admin") ) {
+        if (lastUser == null){
+            lastUser = "";
+        }
+        if (lastUser.equals(user) || user.equals("admin")) {
             indexController.logSave(request, "删除用户" + gson.toJson(entity));
             contactsService.delete(entity);
         }

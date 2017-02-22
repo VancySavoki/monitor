@@ -325,7 +325,8 @@
             select+= value +","
         }
         $.cookie("selectImages", select,{path:"/"})
-        url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+select
+        allip = get_all_ip();
+        url = "/monitor/graph/all/sub?ip=$!{ip}&width=$!{width}$!{bind}&select="+select+"&ips="+allip
         $('#show_image_status_id').html($.cookie("s"))
         $('#iframepage').attr("src", url);
     }
